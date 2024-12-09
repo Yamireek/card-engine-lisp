@@ -32,12 +32,11 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: [
-      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'libs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-    ],
+    include: ['libs/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
+      include: ['libs/**/*'],
+      exclude: ['**/index.ts'],
       reportsDirectory: './coverage/card-engine-lisp',
       provider: 'v8',
     },

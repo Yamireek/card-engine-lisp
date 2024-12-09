@@ -1,17 +1,17 @@
- import { describe, expect, it } from 'vitest'; // <-- **
-import { LispInterpreter } from './engine';
- import { toFunction, toLisp } from './parser2';
+import { describe, expect, it } from 'vitest';
+import { Interpreter } from './interpreter';
+import { toFunction, toLisp } from './utils';
 
 function evaluate(code: string, env = {}) {
-    const interpreter = new LispInterpreter(toLisp(code), env);
-    const interpreted = interpreter.run();
-    const evaluated = toFunction(code, env);
-    if (typeof interpreted === 'function' && typeof evaluated === 'function') {
-      expect(interpreted.toString()).toBe(evaluated.toString());
-    } else {
-      expect(interpreted).toStrictEqual(evaluated);
-    }
-    return interpreted;
+  const interpreter = new Interpreter(toLisp(code), env);
+  const interpreted = interpreter.run();
+  const evaluated = toFunction(code, env);
+  if (typeof interpreted === 'function' && typeof evaluated === 'function') {
+    expect(interpreted.toString()).toBe(evaluated.toString());
+  } else {
+    expect(interpreted).toStrictEqual(evaluated);
+  }
+  return interpreted;
 }
 
 describe('binary expressions', () => {

@@ -1,15 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { isArray } from 'lodash';
-import { SExpr, toFunction } from './parser2';
+import { toFunction } from './utils';
+import { Env, SExpr } from './types';
 
-type LispValue = any;
-
-const operators: Record<string, any> = {
+const operators: Record<string, unknown> = {
   '+': (a: number, b: number) => a + b,
   '-': (a: number, b: number) => a - b,
   '*': (a: number, b: number) => a * b,
   '>': (a: number, b: number) => a > b,
   '?': <T>(condition: boolean, t: T, f: T) => (condition ? t : f),
-  array: (...items: any[]) => ['array', ...items],
+  array: (...items: unknown[]) => ['array', ...items],
 };
 
 function isFinal(expr: SExpr): boolean {
@@ -42,10 +42,10 @@ function isFinal(expr: SExpr): boolean {
   return false;
 }
 
-export class LispInterpreter {
+export class Interpreter {
   public state: {
-    expression: LispValue;
-    env: any;
+    expression: SExpr;
+    env: Env;
     stack: Array<{
       operator: string;
       args: Array<{
@@ -55,7 +55,7 @@ export class LispInterpreter {
     }>;
   };
 
-  constructor(expression: LispValue, env: any = {}) {
+  constructor(expression: SExpr, env: Env = {}) {
     this.state = {
       expression,
       env,
@@ -109,7 +109,6 @@ export class LispInterpreter {
         }
       }
     } else if (typeof expression === 'string' && expression in env) {
-      // Resolve variable name
       this.state.expression = env[expression];
       return true;
     } else if (stack.length > 0) {
@@ -130,14 +129,8 @@ export class LispInterpreter {
 
         const args = frame.args.map((a) => a.expr);
 
-        if (frame.operator === '=') {
-          const varName = args[0] as string;
-          const varValue = args[1] as SExpr;
-          env[varName] = varValue;
-          this.state.expression = undefined;
-          return true;
-        }
         if (frame.operator === 'call') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const funct = args[0] as any[];
           const functArgNames = funct[1] as string[];
           const functArgValues = args[1] as SExpr[];
@@ -174,30 +167,7 @@ export class LispInterpreter {
     return toFunction(this.getResult());
   }
 
-  getResult(): LispValue {
+  getResult() {
     return this.state.expression;
   }
 }
-
-// const a = toLisp("2+1");
-// console.log(JSON.stringify(a));
-
-// const i = new Interpreter(a, {});
-// while (i.state.running == "paused") {
-//   console.log(i.step());
-// }
-
-// const i2 = new LispInterpreter(
-//   toLisp("((f => n => n > 0 ? n + f(n - 1) : 0)(n => n))(5)")
-// );
-// let i = 0;
-// while (i2.step() && i < 200) {
-//   i++;
-//   console.log("i: ", i);
-//   //console.log(i2.state.expression, i2.state.stack);
-// }
-// console.log("Result:", i2.getResult());
-
-// const interpreter = new LispInterpreter(toLisp("1+2"));
-// const result = interpreter.run();
-// console.log(result);
