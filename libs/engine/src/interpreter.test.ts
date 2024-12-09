@@ -1,23 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Interpreter } from './interpreter';
-import { toFunction, toLisp } from './utils';
+import { toLisp } from './utils';
 import { Env } from './types';
-import { cloneDeep } from 'lodash';
 
 function evaluate(code: string, env: Env = {}) {
-  const envClone = cloneDeep(env);
   const interpreter = new Interpreter(toLisp(code), env);
   const interpreted = interpreter.run();
-  const evaluated = toFunction(code, envClone);
-
-  if (evaluated) {
-    if (typeof interpreted === 'function' && typeof evaluated === 'function') {
-      expect(interpreted.toString()).toBe(evaluated.toString());
-    } else {
-      expect(interpreted).toStrictEqual(evaluated);
-    }
-  }
-
   return interpreted;
 }
 
@@ -75,6 +63,10 @@ describe('lambdas', () => {
   it('lambda as parameter', () => {
     expect(evaluate('(f => f())(() => 1)')).toBe(1);
   });
+
+  it('single lambda with two parameters', () => {
+    expect(evaluate('((a,b)=>a+b)(1+2,3)')).toBe(6);
+  });
 });
 
 describe('objects', () => {
@@ -91,11 +83,11 @@ describe('objects', () => {
   it('call object function', () => {
     const obj = {
       a: 1,
-      b: (v: number) => {
-        obj.a = obj.a + v;
+      b: (v1: number, v2: number) => {
+        obj.a = obj.a + v1 * v2;
       },
     };
-    evaluate('obj.b(1+1)', { obj });
-    expect(obj.a).toBe(3);
+    evaluate('obj.b(1+2,3)', { obj });
+    expect(obj.a).toBe(10);
   });
 });

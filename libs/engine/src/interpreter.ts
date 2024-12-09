@@ -49,12 +49,12 @@ function isFinal(expr: SExpr): boolean {
 
 export class Interpreter {
   public state: {
-    expression: SExpr | undefined;
+    expression: any;
     env: Env;
     stack: Array<{
       operator: string;
       args: Array<{
-        expr: SExpr | undefined;
+        expr: any;
         resolved: boolean;
       }>;
     }>;
@@ -99,18 +99,22 @@ export class Interpreter {
             return true;
           }
           case 'call': {
-            const isProperty = isArray(args[0]) && args[0][0] === 'property';
+            const resolvedFirst =
+              isArray(args[0]) &&
+              (args[0][0] === 'property' || args[0][0] === 'lambda');
+
+            const argsExpr = ['array', ...args[1]];
             stack.push({
               operator,
               args: [
                 {
                   expr: args[0],
-                  resolved: isProperty,
+                  resolved: resolvedFirst,
                 },
-                { expr: args[1], resolved: true },
+                { expr: argsExpr, resolved: false },
               ],
             });
-            this.state.expression = !isProperty ? args[0] : undefined;
+            this.state.expression = !resolvedFirst ? args[0] : argsExpr;
             return true;
           }
           default:
@@ -151,7 +155,7 @@ export class Interpreter {
             switch (funct[0]) {
               case 'lambda': {
                 const functArgNames = funct[1] as string[];
-                const functArgValues = args[1] as SExpr[];
+                const functArgValues = args[1].splice(1);
                 functArgNames.forEach((name, i) => {
                   env[name] = functArgValues[i];
                 });
@@ -163,7 +167,7 @@ export class Interpreter {
                 const methodArgs = args[1] as SExpr[];
                 const code = method.toString();
                 const lisp = toLisp(code);
-                this.state.expression = ['call', lisp, methodArgs];
+                this.state.expression = ['call', lisp, methodArgs.splice(1)];
                 return true;
               }
               default:
@@ -176,7 +180,7 @@ export class Interpreter {
             return true;
           }
           case '=': {
-            const path = args[0] as any;
+            const path = (args[0] as any)[1] as any;
             const value = args[1] as any;
             set(env, path, value);
             this.state.expression = value;
