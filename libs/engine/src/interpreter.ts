@@ -157,17 +157,28 @@ export class Interpreter {
                 const functArgNames = funct[1] as string[];
                 const functArgValues = args[1].splice(1);
                 functArgNames.forEach((name, i) => {
-                  env[name] = functArgValues[i];
+                  const value = functArgValues[i];
+                  env[name] =
+                    typeof value === 'string' ? get(env, value) : value;
                 });
                 this.state.expression = funct[2];
                 return true;
               }
               case 'property': {
-                const method = get(env, funct[1]) as Function;
+                const path = funct[1];
+                const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
+                const method = get(env, path) as Function;
                 const methodArgs = args[1] as SExpr[];
                 const code = method.toString();
-                const lisp = toLisp(code);
-                this.state.expression = ['call', lisp, methodArgs.splice(1)];
+                const lisp = toLisp(
+                  code.startsWith('(') ? code : 'function ' + code
+                ) as any;
+                lisp[1].unshift('this');
+                this.state.expression = [
+                  'call',
+                  lisp,
+                  [entityPath, ...methodArgs.splice(1)],
+                ];
                 return true;
               }
               default:

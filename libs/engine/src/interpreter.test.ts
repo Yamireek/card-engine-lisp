@@ -10,7 +10,7 @@ function evaluate(code: string, env: Env = {}) {
 }
 
 describe('binary expressions', () => {
-  it('numbers +', () => {
+  it('numbers expression', () => {
     expect(evaluate('1+2')).toBe(3);
   });
 
@@ -89,5 +89,16 @@ describe('objects', () => {
     };
     evaluate('obj.b(1+2,3)', { obj });
     expect(obj.a).toBe(10);
+  });
+
+  it('this reference', () => {
+    const obj = {
+      a: 1,
+      b(v: number) {
+        this.a = v;
+      },
+    };
+    evaluate('obj.b(5)', { obj });
+    expect(obj.a).toBe(5);
   });
 });

@@ -15,6 +15,8 @@ export function toPropertyPath(value: Expression | PrivateIdentifier): SExpr {
   switch (value.type) {
     case 'Identifier':
       return value.name;
+    case 'ThisExpression':
+      return 'this';
     case 'MemberExpression':
       return `${toPropertyPath(value.object)}.${toPropertyPath(
         value.property
@@ -89,7 +91,7 @@ export function toLisp<F extends Function>(
     case 'FunctionDeclaration':
       return [
         'lambda',
-        simpleMap(value.params, toLisp),
+        value.params.map(toLisp),
         value.body ? toLisp(value.body) : [],
       ];
     case 'BlockStatement':
