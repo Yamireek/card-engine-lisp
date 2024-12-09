@@ -11,6 +11,19 @@ import {
 } from 'meriyah/dist/src/estree';
 import { Env, SExpr } from './types';
 
+export function toPropertyPath(value: Expression | PrivateIdentifier): SExpr {
+  switch (value.type) {
+    case 'Identifier':
+      return value.name;
+    case 'MemberExpression':
+      return `${toPropertyPath(value.object)}.${toPropertyPath(
+        value.property
+      )}`;
+  }
+
+  return ['property', 'unknown'];
+}
+
 export function toLisp<F extends Function>(
   value:
     | F
@@ -44,7 +57,7 @@ export function toLisp<F extends Function>(
     case 'CallExpression':
       return ['call', toLisp(value.callee), value.arguments.map(toLisp)];
     case 'MemberExpression':
-      return toLisp(value);
+      return ['property', toPropertyPath(value)];
     case 'AssignmentExpression':
       return [value.operator, toLisp(value.left), toLisp(value.right)];
     case 'WhileStatement':
@@ -129,11 +142,11 @@ export function toCode(expr: SExpr): string {
       return args.map((a) => toCode(a)).join(' + ');
     case 'array':
       return `[${args.map((a) => toCode(a)).join(', ')}]`;
+    case 'property':
+      return args[0] as string;
   }
 
-  console.log('unknown expr' + JSON.stringify(expr));
-
-  return 'errro';
+  throw new Error('unknown expr' + JSON.stringify(expr));
 }
 
 export function asArray<T>(items: T | T[]): T[] {

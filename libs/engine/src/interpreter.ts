@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
-import { isArray } from 'lodash';
-import { toFunction } from './utils';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { at, get, isArray, set } from 'lodash';
+import { toFunction, toLisp } from './utils';
 import { Env, SExpr } from './types';
 
 const operators: Record<string, unknown> = {
@@ -27,6 +28,10 @@ function isFinal(expr: SExpr): boolean {
     return true;
   }
 
+  if (operator === 'property') {
+    return true;
+  }
+
   if (operator === 'call') {
     return false;
   }
@@ -44,12 +49,12 @@ function isFinal(expr: SExpr): boolean {
 
 export class Interpreter {
   public state: {
-    expression: SExpr;
+    expression: SExpr | undefined;
     env: Env;
     stack: Array<{
       operator: string;
       args: Array<{
-        expr: SExpr;
+        expr: SExpr | undefined;
         resolved: boolean;
       }>;
     }>;
@@ -65,7 +70,7 @@ export class Interpreter {
 
   step(): boolean {
     const { expression, stack, env } = this.state;
-    const terminal = isFinal(expression);
+    const terminal = expression === undefined || isFinal(expression);
 
     if (Array.isArray(expression) && !terminal) {
       const [operator, ...args] = expression;
@@ -85,31 +90,42 @@ export class Interpreter {
           case '=': {
             stack.push({
               operator,
-              args: args.map((a) => ({
-                expr: a,
-                resolved: false,
-              })),
+              args: [
+                { expr: args[0], resolved: true },
+                { expr: args[1], resolved: false },
+              ],
             });
             this.state.expression = args[1];
             return true;
           }
           case 'call': {
+            const isProperty = isArray(args[0]) && args[0][0] === 'property';
             stack.push({
               operator,
               args: [
-                { expr: args[0], resolved: false },
+                {
+                  expr: args[0],
+                  resolved: isProperty,
+                },
                 { expr: args[1], resolved: true },
               ],
             });
-            this.state.expression = args[0];
+            this.state.expression = !isProperty ? args[0] : undefined;
             return true;
           }
           default:
             throw new Error(`Unknown operator: ${operator}`);
         }
       }
-    } else if (typeof expression === 'string' && expression in env) {
-      this.state.expression = env[expression];
+    } else if (typeof expression === 'string') {
+      this.state.expression = get(env, expression);
+      return true;
+    } else if (
+      isArray(expression) &&
+      expression[0] === 'property' &&
+      typeof expression[1] === 'string'
+    ) {
+      this.state.expression = get(env, expression[1]);
       return true;
     } else if (stack.length > 0) {
       const frame = stack[stack.length - 1];
@@ -129,24 +145,52 @@ export class Interpreter {
 
         const args = frame.args.map((a) => a.expr);
 
-        if (frame.operator === 'call') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const funct = args[0] as any[];
-          const functArgNames = funct[1] as string[];
-          const functArgValues = args[1] as SExpr[];
-          functArgNames.forEach((name, i) => {
-            env[name] = functArgValues[i];
-          });
-          this.state.expression = funct[2];
-          return true;
-        } else {
-          const func = operators[frame.operator];
-          if (typeof func !== 'function') {
-            throw new Error(`Operator is not a function: ${frame.operator}`);
+        switch (frame.operator) {
+          case 'call': {
+            const funct = args[0] as any[];
+            switch (funct[0]) {
+              case 'lambda': {
+                const functArgNames = funct[1] as string[];
+                const functArgValues = args[1] as SExpr[];
+                functArgNames.forEach((name, i) => {
+                  env[name] = functArgValues[i];
+                });
+                this.state.expression = funct[2];
+                return true;
+              }
+              case 'property': {
+                const method = get(env, funct[1]) as Function;
+                const methodArgs = args[1] as SExpr[];
+                const code = method.toString();
+                const lisp = toLisp(code);
+                this.state.expression = ['call', lisp, methodArgs];
+                return true;
+              }
+              default:
+                throw new Error('unknown function type:' + funct[0]);
+            }
           }
+          case 'property': {
+            const path = args[0] as string;
+            this.state.expression = get(env, path);
+            return true;
+          }
+          case '=': {
+            const path = args[0] as any;
+            const value = args[1] as any;
+            set(env, path, value);
+            this.state.expression = value;
+            return true;
+          }
+          default: {
+            const func = operators[frame.operator];
+            if (typeof func !== 'function') {
+              throw new Error(`Operator is not a function: ${frame.operator}`);
+            }
 
-          this.state.expression = func(...args);
-          return true;
+            this.state.expression = func(...args);
+            return true;
+          }
         }
       }
     } else {
@@ -164,7 +208,12 @@ export class Interpreter {
       throw new Error('too many steps');
     }
 
-    return toFunction(this.getResult());
+    const result = this.getResult();
+    if (!result) {
+      return;
+    } else {
+      return toFunction(result);
+    }
   }
 
   getResult() {
