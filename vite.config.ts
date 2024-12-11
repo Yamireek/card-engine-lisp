@@ -28,7 +28,6 @@ export default defineConfig({
     },
   },
   test: {
-    ui: true,
     watch: false,
     globals: true,
     environment: 'jsdom',

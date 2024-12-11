@@ -1,21 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { Interpreter } from './interpreter';
-import { toLisp } from './utils';
+import { toInstructions } from './utils';
 import { Env } from './types';
+import { Interpreter } from './interpreter';
 
 function evaluate(code: string, env: Env = {}) {
-  const interpreter = new Interpreter(toLisp(code), env);
+  const interpreter = new Interpreter(toInstructions(code), env);
   const interpreted = interpreter.run();
   return interpreted;
 }
 
-describe('binary expressions', () => {
+describe('expressions', () => {
   it('numbers expression', () => {
     expect(evaluate('1+2')).toBe(3);
   });
 
-  it('numbers braces', () => {
+  it('braces', () => {
     expect(evaluate('(1+2)*3+4')).toBe(13);
+  });
+
+  it('operand order', () => {
+    expect(evaluate('10/2')).toBe(5);
+    expect(evaluate('2/10')).toBe(0.2);
+  });
+
+  it('conditional', () => {
+    expect(evaluate('true?1:2')).toBe(1);
+    expect(evaluate('false?1:2')).toBe(2);
   });
 });
 
@@ -29,6 +39,24 @@ describe('variables', () => {
   });
 });
 
+describe('conditions', () => {
+  it('equals', () => {
+    expect(evaluate('1==1')).toBe(true);
+  });
+
+  it('if true', () => {
+    expect(
+      evaluate('((v) => { if (v==1) { return 5 } else { return 10 } })(1)')
+    ).toBe(5);
+  });
+
+  it('if false', () => {
+    expect(
+      evaluate('((v) => { if (v==1) { return 5 } else { return 10 } })(2)')
+    ).toBe(10);
+  });
+});
+
 describe('arrays', () => {
   it('simple array', () => {
     expect(evaluate('[1,2,3]')).toStrictEqual([1, 2, 3]);
@@ -36,6 +64,14 @@ describe('arrays', () => {
 
   it('expressions in array', () => {
     expect(evaluate('[1+2,3]')).toStrictEqual([3, 3]);
+  });
+
+  it('array filter', () => {
+    expect(
+      evaluate('a.filter(i => i < 3)', {
+        a: [1, 2, 3],
+      })
+    ).toStrictEqual([1, 2]);
   });
 });
 
@@ -57,7 +93,7 @@ describe('lambdas', () => {
   });
 
   it('multiple lambda parameters', () => {
-    expect(evaluate('((a) => (b) => a + b)(1+1)(2)')).toBe(4);
+    expect(evaluate('((a) => (b) => a / b)(2+2)(2-1)')).toBe(4);
   });
 
   it('lambda as parameter', () => {
@@ -66,6 +102,12 @@ describe('lambdas', () => {
 
   it('single lambda with two parameters', () => {
     expect(evaluate('((a,b)=>a+b)(1+2,3)')).toBe(6);
+  });
+
+  it('recursive lambda', () => {
+    expect(
+      evaluate('(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)')
+    ).toBe(120);
   });
 });
 

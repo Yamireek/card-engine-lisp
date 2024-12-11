@@ -1,213 +1,137 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { at, get, isArray, set } from 'lodash';
-import { toFunction, toLisp } from './utils';
-import { Env, SExpr } from './types';
+import { get, isArray, set } from 'lodash';
+import {
+  BinaryOperator,
+  Env,
+  FunctionValue,
+  Instruction,
+  Value,
+} from './types';
+import { toInstructions } from './utils';
 
-const operators: Record<string, unknown> = {
-  '+': (a: number, b: number) => a + b,
-  '-': (a: number, b: number) => a - b,
-  '*': (a: number, b: number) => a * b,
-  '>': (a: number, b: number) => a > b,
-  '?': <T>(condition: boolean, t: T, f: T) => (condition ? t : f),
-  array: (...items: unknown[]) => ['array', ...items],
+const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '*': (a, b) => a * b,
+  '/': (a, b) => a / b,
+  '==': (a, b) => a == b,
+  '<=': (a, b) => a < b,
 };
 
-function isFinal(expr: SExpr): boolean {
-  if (!isArray(expr)) {
-    return true;
+function replaceThis(path: string, ins: Instruction): Instruction {
+  if (typeof ins === 'string') {
+    return ins;
   }
 
-  const [operator, ...args] = expr;
-
-  if (operator === 'array') {
-    return args.every((e) => isFinal(e));
+  switch (ins[0]) {
+    case 'SAVE':
+    case 'LOAD': {
+      return [ins[0], ins[1].replace('this.', path + '.')];
+    }
+    case 'PUSH':
+      if (isArray(ins[1]) && ins[1][0] === 'FUNCTION') {
+        return [
+          'PUSH',
+          [
+            ins[1][0],
+            ins[1][1],
+            ins[1][2],
+            isArray(ins[1][3])
+              ? ins[1][3].map((i) => replaceThis(path, i as any))
+              : (replaceThis(path, ins[1][3]) as any),
+          ],
+        ];
+      }
+      return ins;
+    default:
+      return ins;
   }
-
-  if (operator === 'lambda') {
-    return true;
-  }
-
-  if (operator === 'property') {
-    return true;
-  }
-
-  if (operator === 'call') {
-    return false;
-  }
-
-  if (typeof operator === 'string' && operator in operators) {
-    return false;
-  }
-
-  if (isArray(expr)) {
-    return expr.length === 0;
-  }
-
-  return false;
 }
 
 export class Interpreter {
-  public state: {
-    expression: any;
-    env: Env;
-    stack: Array<{
-      operator: string;
-      args: Array<{
-        expr: any;
-        resolved: boolean;
-      }>;
-    }>;
-  };
+  public stack: Value[] = [];
 
-  constructor(expression: SExpr, env: Env = {}) {
-    this.state = {
-      expression,
-      env,
-      stack: [],
-    };
+  constructor(public instructions: Instruction[], public globals: Env = {}) {
+    console.log(JSON.stringify(instructions, null, 1));
+  }
+
+  private execute(ins: Instruction) {
+    if (typeof ins === 'string') {
+      switch (ins) {
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '==':
+        case '<=': {
+          const b = this.stack.pop() as number;
+          const a = this.stack.pop() as number;
+          this.stack.push(operations[ins](a, b));
+          return;
+        }
+        case 'IF': {
+          const result = this.stack.pop() as boolean;
+          const ifFalse = this.stack.pop() as Instruction[];
+          const ifTrue = this.stack.pop() as Instruction[];
+          this.instructions.unshift(...(result ? ifTrue : ifFalse));
+          return;
+        }
+      }
+    }
+
+    switch (ins[0]) {
+      case 'PUSH': {
+        const value = ins[1];
+        this.stack.push(value);
+        return;
+      }
+      case 'LOAD': {
+        const path = ins[1];
+        const value = get(this.globals, path);
+        if (typeof value === 'function') {
+          const code = value.toString() as string;
+          const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
+          const func = replaceThis(
+            entityPath,
+            toInstructions(code.startsWith('(') ? code : `function ${code}`)[0]
+          ) as any;
+          this.stack.push(func[1]);
+        } else {
+          this.stack.push(value);
+        }
+
+        return;
+      }
+      case 'SAVE': {
+        const path = ins[1];
+        const value = this.stack.pop();
+        set(this.globals, path, value);
+        return;
+      }
+      case 'CALL': {
+        const func = this.stack.pop() as FunctionValue;
+        for (const arg of func[2]) {
+          const value = this.stack.pop();
+          if (value) {
+            this.globals[arg] = value;
+          }
+        }
+        this.instructions.unshift(...func[3]);
+        return;
+      }
+      case 'RETURN': {
+        return;
+      }
+      default:
+        throw new Error('unknown operator: ' + ins[0]);
+    }
   }
 
   step(): boolean {
-    const { expression, stack, env } = this.state;
-    const terminal = expression === undefined || isFinal(expression);
-
-    if (Array.isArray(expression) && !terminal) {
-      const [operator, ...args] = expression;
-
-      if (typeof operator === 'string' && operator in operators) {
-        stack.push({
-          operator,
-          args: args.map((a) => ({
-            expr: a,
-            resolved: false,
-          })),
-        });
-        this.state.expression = args[0];
-        return true;
-      } else {
-        switch (operator) {
-          case '=': {
-            stack.push({
-              operator,
-              args: [
-                { expr: args[0], resolved: true },
-                { expr: args[1], resolved: false },
-              ],
-            });
-            this.state.expression = args[1];
-            return true;
-          }
-          case 'call': {
-            const resolvedFirst =
-              isArray(args[0]) &&
-              (args[0][0] === 'property' || args[0][0] === 'lambda');
-
-            const argsExpr = ['array', ...args[1]];
-            stack.push({
-              operator,
-              args: [
-                {
-                  expr: args[0],
-                  resolved: resolvedFirst,
-                },
-                { expr: argsExpr, resolved: false },
-              ],
-            });
-            this.state.expression = !resolvedFirst ? args[0] : argsExpr;
-            return true;
-          }
-          default:
-            throw new Error(`Unknown operator: ${operator}`);
-        }
-      }
-    } else if (typeof expression === 'string') {
-      this.state.expression = get(env, expression);
+    const next = this.instructions.shift();
+    if (next) {
+      this.execute(next);
       return true;
-    } else if (
-      isArray(expression) &&
-      expression[0] === 'property' &&
-      typeof expression[1] === 'string'
-    ) {
-      this.state.expression = get(env, expression[1]);
-      return true;
-    } else if (stack.length > 0) {
-      const frame = stack[stack.length - 1];
-      const resolved = frame.args.find((a) => !a.resolved);
-      if (resolved) {
-        resolved.expr = expression;
-        resolved.resolved = true;
-      }
-
-      const unresolved = frame.args.find((a) => !a.resolved);
-
-      if (unresolved) {
-        this.state.expression = unresolved.expr;
-        return true;
-      } else {
-        stack.pop();
-
-        const args = frame.args.map((a) => a.expr);
-
-        switch (frame.operator) {
-          case 'call': {
-            const funct = args[0] as any[];
-            switch (funct[0]) {
-              case 'lambda': {
-                const functArgNames = funct[1] as string[];
-                const functArgValues = args[1].splice(1);
-                functArgNames.forEach((name, i) => {
-                  const value = functArgValues[i];
-                  env[name] =
-                    typeof value === 'string' ? get(env, value) : value;
-                });
-                this.state.expression = funct[2];
-                return true;
-              }
-              case 'property': {
-                const path = funct[1];
-                const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
-                const method = get(env, path) as Function;
-                const methodArgs = args[1] as SExpr[];
-                const code = method.toString();
-                const lisp = toLisp(
-                  code.startsWith('(') ? code : 'function ' + code
-                ) as any;
-                lisp[1].unshift('this');
-                this.state.expression = [
-                  'call',
-                  lisp,
-                  [entityPath, ...methodArgs.splice(1)],
-                ];
-                return true;
-              }
-              default:
-                throw new Error('unknown function type:' + funct[0]);
-            }
-          }
-          case 'property': {
-            const path = args[0] as string;
-            this.state.expression = get(env, path);
-            return true;
-          }
-          case '=': {
-            const path = (args[0] as any)[1] as any;
-            const value = args[1] as any;
-            set(env, path, value);
-            this.state.expression = value;
-            return true;
-          }
-          default: {
-            const func = operators[frame.operator];
-            if (typeof func !== 'function') {
-              throw new Error(`Operator is not a function: ${frame.operator}`);
-            }
-
-            this.state.expression = func(...args);
-            return true;
-          }
-        }
-      }
     } else {
       return false;
     }
@@ -215,7 +139,7 @@ export class Interpreter {
 
   run() {
     let step = 0;
-    while (this.step() || step > 1000) {
+    while (step < 1000 && this.step()) {
       step++;
     }
 
@@ -223,15 +147,17 @@ export class Interpreter {
       throw new Error('too many steps');
     }
 
-    const result = this.getResult();
-    if (!result) {
-      return;
-    } else {
-      return toFunction(result);
-    }
+    return this.getResult();
   }
 
   getResult() {
-    return this.state.expression;
+    if (this.stack.length === 0) {
+      return undefined;
+    }
+    if (this.stack.length === 1) {
+      return this.stack[0];
+    } else {
+      return this.stack;
+    }
   }
 }
