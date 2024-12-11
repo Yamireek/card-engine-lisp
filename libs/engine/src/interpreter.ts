@@ -8,6 +8,7 @@ import {
   Value,
 } from './types';
 import { toInstructions } from './utils';
+import { makeAutoObservable } from 'mobx';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -15,7 +16,7 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '*': (a, b) => a * b,
   '/': (a, b) => a / b,
   '==': (a, b) => a == b,
-  '<=': (a, b) => a < b,
+  '<=': (a, b) => a <= b,
 };
 
 function replaceThis(path: string, ins: Instruction): Instruction {
@@ -53,6 +54,7 @@ export class Interpreter {
 
   constructor(public instructions: Instruction[], public globals: Env = {}) {
     console.log(JSON.stringify(instructions, null, 1));
+    makeAutoObservable(this);
   }
 
   private execute(ins: Instruction) {
