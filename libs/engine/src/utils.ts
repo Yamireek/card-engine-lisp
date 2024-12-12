@@ -150,7 +150,11 @@ export function toInstructions<F extends Function>(
     case 'BlockStatement':
       return value.body.flatMap(toInstructions);
     case 'Literal':
-      if (typeof value.value === 'number' || typeof value.value === 'boolean') {
+      if (
+        typeof value.value === 'number' ||
+        typeof value.value === 'boolean' ||
+        typeof value.value === 'string'
+      ) {
         return [['PUSH', value.value]];
       } else {
         throw new Error('not supported literal type:' + typeof value.value);
@@ -160,6 +164,39 @@ export function toInstructions<F extends Function>(
       return [
         ...value.elements.flatMap((e) => (e ? toInstructions(e) : [])),
         ['ARRAY', length],
+      ];
+    }
+    case 'VariableDeclaration': {
+      return value.declarations.flatMap(toInstructions);
+    }
+    case 'VariableDeclarator':
+      if (value.init) {
+        return [
+          ...toInstructions(value.init),
+          ['SAVE', value.id.type === 'Identifier' ? value.id.name : 'unknown'],
+        ];
+      } else {
+        return [];
+      }
+    case 'ForOfStatement': {
+      const name =
+        value.left.type === 'VariableDeclaration'
+          ? value.left.declarations
+              .map((d) =>
+                d.type === 'VariableDeclarator'
+                  ? d.id.type === 'Identifier'
+                    ? d.id.name
+                    : ''
+                  : ''
+              )
+              .join('')
+          : '';
+      const body = toInstructions(value.body);
+      const path = toPath(value.right);
+      return [
+        ['PUSH', { type: 'FUNCTION', name: '', parameters: [name], body }],
+        ['LOAD', path],
+        ['ITERATE', name],
       ];
     }
     default:
@@ -184,6 +221,10 @@ export function valueToString(value: Value): string {
     return value.toString();
   }
 
+  if (value === undefined) {
+    return 'undefined';
+  }
+
   if (value.type === 'FUNCTION') {
     return `(${value.name}(${value.parameters}) => ${toCode(
       asArray(value.body)
@@ -192,6 +233,10 @@ export function valueToString(value: Value): string {
 
   if (value.type === 'INSTRUCTIONS') {
     return toCode(value.body);
+  }
+
+  if (value.type === 'ARRAY') {
+    return `[${value.items.map(valueToString).join(', ')}]`;
   }
 
   return `unknown value: ${JSON.stringify(value)}`;
@@ -213,9 +258,20 @@ export function valueToJs(value: Value): any {
   return `unknown value: ${JSON.stringify(value)}`;
 }
 
-export function toJSFunction(f: FunctionValue): Function {
+export function toJSFunction(
+  f: FunctionValue,
+  args: Array<{ name: string; value: any }>
+): Function {
   const code = `return (${f.parameters})=>(${toCode(f.body)})`;
-  return new Function(code)();
+  console.log(code);
+
+  // const fx = new Function('predicate', 'return (c)=>(predicate(c))');
+  // const f2 = fx();
+  // const code2 = f2.toString();
+  // console.log(code2);
+
+  const jsF = new Function('predicate', code);
+  return jsF(...args.map((a) => a.value));
 }
 
 export function toCode(commands: Instruction[], values: Value[] = []): string {
@@ -268,6 +324,12 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
           stack.push(`${arg} = ${v}`);
           break;
         }
+        case 'ITERATE': {
+          const path = stack.pop();
+          const f = stack.pop();
+          stack.push(`${path}.forEach(${f})`);
+          break;
+        }
         default:
           return 'unknown:' + JSON.stringify(command);
       }
@@ -275,4 +337,24 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
   }
 
   return stack[0];
+}
+
+export function values<TK extends string | number, TI>(
+  records?: Partial<Record<TK, TI>>
+) {
+  if (!records) {
+    return [];
+  }
+  return Object.values(records) as TI[];
+}
+
+export function keys<TK extends string | number, TI>(
+  records?: Partial<Record<TK, TI>>
+): TK[] {
+  if (!records) {
+    return [];
+  }
+  return Object.keys(records).filter(
+    (k) => records[k as TK] !== undefined
+  ) as TK[];
 }

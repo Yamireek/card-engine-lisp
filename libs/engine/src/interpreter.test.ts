@@ -46,6 +46,12 @@ describe('variables', () => {
   it('var in array', () => {
     expect(evaluate('[a,a*2]', { a: 2 })).toStrictEqual([2, 4]);
   });
+
+  it('var declaration', () => {
+    const env = observable({ b: 1 });
+    evaluate('const a = 2 * 3; b = a * 4', env);
+    expect(env.b).toBe(24);
+  });
 });
 
 describe('conditions', () => {
@@ -78,7 +84,9 @@ describe('arrays', () => {
   it('array on object filter', () => {
     expect(
       evaluate('a.filter(i => i < 3)', {
-        a: [1, 2, 3],
+        get a() {
+          return [1, 2, 3];
+        },
       })
     ).toStrictEqual([1, 2]);
   });
@@ -151,5 +159,13 @@ describe('objects', () => {
     });
     evaluate('obj.b(5)', { obj });
     expect(obj.a).toBe(5);
+  });
+});
+
+describe('forof', () => {
+  it('simple loop', () => {
+    const obj = observable({ a: [1, 2, 3], b: 0 });
+    evaluate('for(const i of obj.a) { obj.b = obj.b + i }', { obj });
+    expect(obj.b).toBe(6);
   });
 });

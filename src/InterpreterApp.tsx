@@ -29,7 +29,6 @@ import { observer } from 'mobx-react-lite';
 import JsonView from '@uiw/react-json-view';
 import { monokaiTheme } from '@uiw/react-json-view/monokai';
 import { reverse } from 'lodash/fp';
-import { Inspector } from 'react-inspector';
 
 const codeheight = 300;
 
@@ -92,7 +91,8 @@ export const InfoPanel = (
 
 export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
-    '(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
+    //'(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
+    'for(const i of obj.a) { obj.b = obj.b + i }'
   );
 
   const instructions = useMemo(() => {
@@ -104,15 +104,7 @@ export const InterpreterApp = observer(() => {
   }, [code]);
 
   const interpreter = useMemo(
-    () =>
-      new Interpreter(instructions, {
-        obj: {
-          a: 1,
-          b(v: number) {
-            this.a = v;
-          },
-        },
-      }),
+    () => new Interpreter(instructions, { obj: { a: [1, 2, 3], b: 0 } }, true),
     [instructions]
   );
 

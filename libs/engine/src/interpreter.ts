@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { get, isArray, set } from 'lodash';
 import {
+  ArrayValue,
   BinaryOperator,
   Env,
   FunctionValue,
@@ -9,7 +10,7 @@ import {
   Value,
 } from './types';
 import { toCode, toInstructions, toJSFunction } from './utils';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, toJS } from 'mobx';
 
 const nativeFuncRegex = /function ([a-z]*)\(\) { \[native code\] }/gm;
 
@@ -51,11 +52,18 @@ function replaceThis(path: string, ins: Instruction): Instruction {
 export class Interpreter {
   public stack: Value[] = [];
 
-  constructor(public instructions: Instruction[], public globals: Env = {}) {
-    //makeAutoObservable(this);
+  constructor(
+    public instructions: Instruction[],
+    public globals: Env = {},
+    public observable = false
+  ) {
+    if (observable) {
+      makeAutoObservable(this);
+    }
   }
 
   private execute(ins: Instruction) {
+    console.log('execute', toJS(ins));
     if (typeof ins === 'string') {
       switch (ins) {
         case '+':
@@ -85,7 +93,12 @@ export class Interpreter {
           if (func.native && func.name === 'filter') {
             const array = get(this.globals, func.native);
             const checkerValue = this.stack.pop() as FunctionValue;
-            const checkerFunction = toJSFunction(checkerValue);
+            const checkerFunction = toJSFunction(checkerValue, [
+              {
+                name: 'predicate',
+                value: toJSFunction(this.globals['predicate'], []),
+              },
+            ]);
             const filtered = array.filter(checkerFunction);
             this.stack.push({ type: 'ARRAY', items: filtered });
             return;
@@ -141,7 +154,11 @@ export class Interpreter {
             this.stack.push(func[1]);
           }
         } else {
-          this.stack.push(value);
+          if (isArray(value)) {
+            this.stack.push({ type: 'ARRAY', items: value });
+          } else {
+            this.stack.push(value);
+          }
         }
 
         return;
@@ -159,6 +176,14 @@ export class Interpreter {
         }
         items.reverse();
         this.stack.push({ type: 'ARRAY', items });
+        return;
+      }
+      case 'ITERATE': {
+        const array = this.stack.pop() as ArrayValue;
+        const f = this.stack.pop() as FunctionValue;
+        for (const item of array.items) {
+          this.instructions.unshift(['PUSH', item], ['PUSH', f], 'CALL');
+        }
         return;
       }
       default:
