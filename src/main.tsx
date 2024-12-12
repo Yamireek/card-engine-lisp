@@ -4,7 +4,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { App } from './app';
+import { InterpreterApp } from './InterpreterApp';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,6 +12,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <StrictMode>
-    <App />
+    <InterpreterApp />
   </StrictMode>
 );

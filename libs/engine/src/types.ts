@@ -1,6 +1,7 @@
 export type FunctionValue = {
   type: 'FUNCTION';
   name: string;
+  native?: string;
   parameters: string[];
   body: Instruction[];
 };
@@ -20,9 +21,10 @@ export type Value =
   | boolean
   | string
   | FunctionValue
-  | InstructionsValue;
+  | InstructionsValue
+  | ArrayValue;
 
-export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '<=';
+export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '<=' | '<';
 
 export type AssignmentOperator = '=';
 
@@ -34,6 +36,7 @@ export type Instruction =
   | 'CALL'
   | ['PUSH', Value]
   | ['LOAD', string]
-  | ['SAVE', string];
+  | ['SAVE', string]
+  | ['ARRAY', number];
 
 export type Env = Record<string, any>;

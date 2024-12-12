@@ -9,7 +9,7 @@ import {
   Statement,
   VariableDeclarator,
 } from 'meriyah/dist/src/estree';
-import { BinaryOperator, Instruction, Value } from './types';
+import { BinaryOperator, FunctionValue, Instruction, Value } from './types';
 
 export function asArray<T>(items: T | T[]): T[] {
   if (isArray(items)) {
@@ -155,8 +155,13 @@ export function toInstructions<F extends Function>(
       } else {
         throw new Error('not supported literal type:' + typeof value.value);
       }
-    case 'ArrayExpression':
-      return value.elements.flatMap((e) => (e ? toInstructions(e) : []));
+    case 'ArrayExpression': {
+      const length = value.elements.length;
+      return [
+        ...value.elements.flatMap((e) => (e ? toInstructions(e) : [])),
+        ['ARRAY', length],
+      ];
+    }
     default:
       throw new Error('unknown ast type:' + value.type);
   }
@@ -192,6 +197,27 @@ export function valueToString(value: Value): string {
   return `unknown value: ${JSON.stringify(value)}`;
 }
 
+export function valueToJs(value: Value): any {
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'string'
+  ) {
+    return value;
+  }
+
+  if (value.type === 'ARRAY') {
+    return value.items.map(valueToJs);
+  }
+
+  return `unknown value: ${JSON.stringify(value)}`;
+}
+
+export function toJSFunction(f: FunctionValue): Function {
+  const code = `return (${f.parameters})=>(${toCode(f.body)})`;
+  return new Function(code)();
+}
+
 export function toCode(commands: Instruction[], values: Value[] = []): string {
   const stack = values.map(valueToString);
 
@@ -203,6 +229,7 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
         case '*':
         case '/':
         case '<=':
+        case '<':
         case '==': {
           const b = stack.pop();
           const a = stack.pop();

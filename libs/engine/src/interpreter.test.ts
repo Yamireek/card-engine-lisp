@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toCode, toInstructions } from './utils';
+import { toCode, toInstructions, valueToJs, valueToString } from './utils';
 import { Env } from './types';
 import { Interpreter } from './interpreter';
 import { observable } from 'mobx';
@@ -11,7 +11,11 @@ function evaluate(code: string, env: Env = {}) {
   console.log('decompiled', toCode(instructions));
   const interpreter = new Interpreter(instructions, env);
   const interpreted = interpreter.run();
-  return interpreted;
+  if (interpreted) {
+    return valueToJs(interpreted);
+  } else {
+    return undefined;
+  }
 }
 
 describe('expressions', () => {
@@ -71,7 +75,7 @@ describe('arrays', () => {
     expect(evaluate('[1+2,3]')).toStrictEqual([3, 3]);
   });
 
-  it.skip('array filter', () => {
+  it('array on object filter', () => {
     expect(
       evaluate('a.filter(i => i < 3)', {
         a: [1, 2, 3],

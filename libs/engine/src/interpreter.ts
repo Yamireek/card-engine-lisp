@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { get, set } from 'lodash';
+import { get, isArray, set } from 'lodash';
 import {
   BinaryOperator,
   Env,
@@ -8,8 +8,10 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { toInstructions } from './utils';
+import { toCode, toInstructions, toJSFunction } from './utils';
 import { makeAutoObservable } from 'mobx';
+
+const nativeFuncRegex = /function ([a-z]*)\(\) { \[native code\] }/gm;
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -49,7 +51,7 @@ export class Interpreter {
   public stack: Value[] = [];
 
   constructor(public instructions: Instruction[], public globals: Env = {}) {
-    makeAutoObservable(this);
+    //makeAutoObservable(this);
   }
 
   private execute(ins: Instruction) {
@@ -79,14 +81,23 @@ export class Interpreter {
         }
         case 'CALL': {
           const func = this.stack.pop() as FunctionValue;
-          for (const arg of func.parameters) {
-            const value = this.stack.pop();
-            if (value) {
-              this.globals[arg] = value;
+          if (func.native && func.name === 'filter') {
+            const array = get(this.globals, func.native);
+            const checkerValue = this.stack.pop() as FunctionValue;
+            const checkerFunction = toJSFunction(checkerValue);
+            const filtered = array.filter(checkerFunction);
+            this.stack.push({ type: 'ARRAY', items: filtered });
+            return;
+          } else {
+            for (const arg of func.parameters) {
+              const value = this.stack.pop();
+              if (value) {
+                this.globals[arg] = value;
+              }
             }
+            this.instructions.unshift(...func.body);
+            return;
           }
-          this.instructions.unshift(...func.body);
-          return;
         }
         default:
           return `unknown instruction: ${ins}`;
@@ -105,11 +116,29 @@ export class Interpreter {
         if (typeof value === 'function') {
           const code = value.toString() as string;
           const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
-          const func = replaceThis(
-            entityPath,
-            toInstructions(code.startsWith('(') ? code : `function ${code}`)[0]
-          ) as any;
-          this.stack.push(func[1]);
+
+          const nativeMatch = nativeFuncRegex.exec(code);
+          if (nativeMatch?.length && nativeMatch.length > 0) {
+            const methodName = nativeMatch[1];
+            const entity = get(this.globals, entityPath);
+            if (isArray(entity)) {
+              this.stack.push({
+                type: 'FUNCTION',
+                name: methodName,
+                native: entityPath,
+                parameters: [''],
+                body: [],
+              });
+            }
+          } else {
+            const func = replaceThis(
+              entityPath,
+              toInstructions(
+                code.startsWith('(') ? code : `function ${code}`
+              )[0]
+            ) as any;
+            this.stack.push(func[1]);
+          }
         } else {
           this.stack.push(value);
         }
@@ -120,6 +149,15 @@ export class Interpreter {
         const path = ins[1];
         const value = this.stack.pop();
         set(this.globals, path, value);
+        return;
+      }
+      case 'ARRAY': {
+        const items: Value[] = [];
+        for (let i = 0; i < ins[1]; i++) {
+          items.push(this.stack.pop() as Value);
+        }
+        items.reverse();
+        this.stack.push({ type: 'ARRAY', items });
         return;
       }
       default:
@@ -154,10 +192,7 @@ export class Interpreter {
     if (this.stack.length === 0) {
       return undefined;
     }
-    if (this.stack.length === 1) {
-      return this.stack[0];
-    } else {
-      return this.stack;
-    }
+
+    return this.stack[0];
   }
 }

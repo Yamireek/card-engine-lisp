@@ -90,7 +90,7 @@ export const InfoPanel = (
   );
 };
 
-export const App = observer(() => {
+export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
     '(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
   );
