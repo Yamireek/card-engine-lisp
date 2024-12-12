@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { toInstructions } from './utils';
+import { toCode, toInstructions } from './utils';
 import { Env } from './types';
 import { Interpreter } from './interpreter';
 import { observable } from 'mobx';
 
 function evaluate(code: string, env: Env = {}) {
-  const interpreter = new Interpreter(toInstructions(code), env);
+  const instructions = toInstructions(code);
+  console.log('code', code);
+  console.log('instructions', instructions);
+  console.log('decompiled', toCode(instructions));
+  const interpreter = new Interpreter(instructions, env);
   const interpreted = interpreter.run();
   return interpreted;
 }

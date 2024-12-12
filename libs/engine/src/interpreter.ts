@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { get, isArray, set } from 'lodash';
+import { get, set } from 'lodash';
 import {
   BinaryOperator,
   Env,
   FunctionValue,
   Instruction,
+  InstructionsValue,
   Value,
 } from './types';
 import { toInstructions } from './utils';
@@ -29,21 +30,16 @@ function replaceThis(path: string, ins: Instruction): Instruction {
     case 'LOAD': {
       return [ins[0], ins[1].replace('this.', path + '.')];
     }
-    case 'PUSH':
-      if (isArray(ins[1]) && ins[1][0] === 'FUNCTION') {
+    case 'PUSH': {
+      const v = ins[1];
+      if (typeof v === 'object' && v.type === 'FUNCTION') {
         return [
           'PUSH',
-          [
-            ins[1][0],
-            ins[1][1],
-            ins[1][2],
-            isArray(ins[1][3])
-              ? ins[1][3].map((i) => replaceThis(path, i as any))
-              : (replaceThis(path, ins[1][3]) as any),
-          ],
+          { ...v, body: v.body.map((i) => replaceThis(path, i)) },
         ];
       }
       return ins;
+    }
     default:
       return ins;
   }
@@ -53,7 +49,6 @@ export class Interpreter {
   public stack: Value[] = [];
 
   constructor(public instructions: Instruction[], public globals: Env = {}) {
-    console.log(JSON.stringify(instructions, null, 1));
     makeAutoObservable(this);
   }
 
@@ -71,19 +66,36 @@ export class Interpreter {
           this.stack.push(operations[ins](a, b));
           return;
         }
+        case '?':
         case 'IF': {
           const result = this.stack.pop() as boolean;
-          const ifFalse = this.stack.pop() as Instruction[];
-          const ifTrue = this.stack.pop() as Instruction[];
-          this.instructions.unshift(...(result ? ifTrue : ifFalse));
+          const ifFalse = this.stack.pop() as InstructionsValue;
+          const ifTrue = this.stack.pop() as InstructionsValue;
+          this.instructions.unshift(...(result ? ifTrue.body : ifFalse.body));
           return;
         }
+        case 'RETURN': {
+          return;
+        }
+        case 'CALL': {
+          const func = this.stack.pop() as FunctionValue;
+          for (const arg of func.parameters) {
+            const value = this.stack.pop();
+            if (value) {
+              this.globals[arg] = value;
+            }
+          }
+          this.instructions.unshift(...func.body);
+          return;
+        }
+        default:
+          return `unknown instruction: ${ins}`;
       }
     }
 
     switch (ins[0]) {
       case 'PUSH': {
-        const value = ins[1];
+        const value = ins[1] as Value;
         this.stack.push(value);
         return;
       }
@@ -108,20 +120,6 @@ export class Interpreter {
         const path = ins[1];
         const value = this.stack.pop();
         set(this.globals, path, value);
-        return;
-      }
-      case 'CALL': {
-        const func = this.stack.pop() as FunctionValue;
-        for (const arg of func[2]) {
-          const value = this.stack.pop();
-          if (value) {
-            this.globals[arg] = value;
-          }
-        }
-        this.instructions.unshift(...func[3]);
-        return;
-      }
-      case 'RETURN': {
         return;
       }
       default:

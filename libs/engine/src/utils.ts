@@ -9,7 +9,7 @@ import {
   Statement,
   VariableDeclarator,
 } from 'meriyah/dist/src/estree';
-import { BinaryOperator, Instruction } from './types';
+import { BinaryOperator, Instruction, Value } from './types';
 
 export function asArray<T>(items: T | T[]): T[] {
   if (isArray(items)) {
@@ -62,19 +62,34 @@ export function toInstructions<F extends Function>(
       const params = value.params.map((p) =>
         p.type === 'Identifier' ? p.name : 'unknown'
       );
-      return [['PUSH', ['FUNCTION', '', params, toInstructions(value.body)]]];
+      return [
+        [
+          'PUSH',
+          {
+            type: 'FUNCTION',
+            name: '',
+            parameters: params,
+            body: toInstructions(value.body),
+          },
+        ],
+      ];
     }
     case 'IfStatement': {
       const test = toInstructions(value.test);
       const ifTrue = toInstructions(value.consequent);
       const ifFalse = value.alternate ? toInstructions(value.alternate) : [];
-      return [['PUSH', ifTrue], ['PUSH', ifFalse], ...test, 'IF'];
+      return [
+        ['PUSH', { type: 'INSTRUCTIONS', body: ifTrue }],
+        ['PUSH', { type: 'INSTRUCTIONS', body: ifFalse }],
+        ...test,
+        'IF',
+      ];
     }
     case 'ReturnStatement': {
       if (value.argument) {
-        return [...toInstructions(value.argument), ['RETURN']];
+        return [...toInstructions(value.argument), 'RETURN'];
       } else {
-        return [['RETURN']];
+        return ['RETURN'];
       }
     }
     case 'FunctionDeclaration': {
@@ -86,12 +101,12 @@ export function toInstructions<F extends Function>(
       const f: Instruction[] = [
         [
           'PUSH',
-          [
-            'FUNCTION',
+          {
+            type: 'FUNCTION',
             name,
-            params,
-            value.body ? toInstructions(value.body) : [],
-          ],
+            parameters: params,
+            body: value.body ? toInstructions(value.body) : [],
+          },
         ],
       ];
 
@@ -107,7 +122,7 @@ export function toInstructions<F extends Function>(
       return [
         ...value.arguments.flatMap(toInstructions),
         ...toInstructions(value.callee),
-        ['CALL'],
+        'CALL',
       ];
     case 'MemberExpression':
       return [['LOAD', toPath(value)]];
@@ -125,7 +140,12 @@ export function toInstructions<F extends Function>(
       const test = toInstructions(value.test);
       const ifTrue = toInstructions(value.consequent);
       const ifFalse = value.alternate ? toInstructions(value.alternate) : [];
-      return [['PUSH', ifTrue], ['PUSH', ifFalse], ...test, 'IF'];
+      return [
+        ['PUSH', { type: 'INSTRUCTIONS', body: ifTrue }],
+        ['PUSH', { type: 'INSTRUCTIONS', body: ifFalse }],
+        ...test,
+        '?',
+      ];
     }
     case 'BlockStatement':
       return value.body.flatMap(toInstructions);
@@ -148,4 +168,84 @@ export function simpleMap<A, B>(items: A[], mapper: (item: A) => B): B | B[] {
   } else {
     return items.map(mapper);
   }
+}
+
+export function valueToString(value: Value): string {
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'string'
+  ) {
+    return value.toString();
+  }
+
+  if (value.type === 'FUNCTION') {
+    return `(${value.name}(${value.parameters}) => ${toCode(
+      asArray(value.body)
+    )})`;
+  }
+
+  if (value.type === 'INSTRUCTIONS') {
+    return toCode(value.body);
+  }
+
+  return `unknown value: ${JSON.stringify(value)}`;
+}
+
+export function toCode(commands: Instruction[], values: Value[] = []): string {
+  const stack = values.map(valueToString);
+
+  for (const command of commands) {
+    if (typeof command === 'string') {
+      switch (command) {
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '<=':
+        case '==': {
+          const b = stack.pop();
+          const a = stack.pop();
+          stack.push(`(${a} ${command} ${b})`);
+          break;
+        }
+        case 'IF': {
+          const c = stack.pop();
+          const b = stack.pop();
+          const a = stack.pop();
+          stack.push(`(${c} ? ${a} : ${b})`);
+          break;
+        }
+        case 'CALL': {
+          const f = stack.pop();
+          const args = stack.pop();
+          stack.push(`${f}(${args})`);
+          break;
+        }
+        default:
+          return 'unknown:' + JSON.stringify(command);
+      }
+    } else {
+      const [operator, arg] = command;
+
+      switch (operator) {
+        case 'PUSH':
+          stack.push(valueToString(command[1]));
+          break;
+        case 'LOAD': {
+          stack.push(arg);
+          break;
+        }
+        case 'SAVE': {
+          const v = stack.pop() as string;
+          stack.push(`${arg} = ${v}`);
+          break;
+        }
+        default:
+          return 'unknown:' + JSON.stringify(command);
+      }
+    }
+  }
+
+  return stack[0];
 }
