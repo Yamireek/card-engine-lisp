@@ -20,6 +20,7 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '/': (a, b) => a / b,
   '==': (a, b) => a == b,
   '<=': (a, b) => a <= b,
+  '<': (a, b) => a < b,
 };
 
 function replaceThis(path: string, ins: Instruction): Instruction {

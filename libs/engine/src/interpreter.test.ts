@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toCode, toInstructions, valueToJs, valueToString } from './utils';
+import { toCode, toInstructions, valueToJs } from './utils';
 import { Env } from './types';
 import { Interpreter } from './interpreter';
 import { observable } from 'mobx';
