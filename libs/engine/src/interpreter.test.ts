@@ -84,9 +84,7 @@ describe('arrays', () => {
   it('array on object filter', () => {
     expect(
       evaluate('a.filter(i => i < 3)', {
-        get a() {
-          return [1, 2, 3];
-        },
+        a: [1, 2, 3],
       })
     ).toStrictEqual([1, 2]);
   });
@@ -118,7 +116,7 @@ describe('lambdas', () => {
   });
 
   it('single lambda with two parameters', () => {
-    expect(evaluate('((a,b)=>a+b)(1+2,3)')).toBe(6);
+    expect(evaluate('((a,b)=>a/b)(1+2+3,3)')).toBe(2);
   });
 
   it('recursive lambda', () => {

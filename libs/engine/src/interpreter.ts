@@ -11,6 +11,7 @@ import {
 } from './types';
 import { toCode, toInstructions, toJSFunction } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
+import { reverse } from 'ramda';
 
 const nativeFuncRegex = /function ([a-z]*)\(\) { \[native code\] }/gm;
 
@@ -93,17 +94,12 @@ export class Interpreter {
           if (func.native && func.name === 'filter') {
             const array = get(this.globals, func.native);
             const checkerValue = this.stack.pop() as FunctionValue;
-            const checkerFunction = toJSFunction(checkerValue, [
-              {
-                name: 'predicate',
-                value: toJSFunction(this.globals['predicate'], []),
-              },
-            ]);
+            const checkerFunction = toJSFunction(checkerValue);
             const filtered = array.filter(checkerFunction);
             this.stack.push({ type: 'ARRAY', items: filtered });
             return;
           } else {
-            for (const arg of func.parameters) {
+            for (const arg of reverse(func.parameters)) {
               const value = this.stack.pop();
               if (value) {
                 this.globals[arg] = value;

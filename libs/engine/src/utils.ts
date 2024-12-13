@@ -260,16 +260,9 @@ export function valueToJs(value: Value): any {
 
 export function toJSFunction(
   f: FunctionValue,
-  args: Array<{ name: string; value: any }>
+  args: Array<{ name: string; value: any }> = []
 ): Function {
   const code = `return (${f.parameters})=>(${toCode(f.body)})`;
-  console.log(code);
-
-  // const fx = new Function('predicate', 'return (c)=>(predicate(c))');
-  // const f2 = fx();
-  // const code2 = f2.toString();
-  // console.log(code2);
-
   const jsF = new Function('predicate', code);
   return jsF(...args.map((a) => a.value));
 }
