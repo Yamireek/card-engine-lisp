@@ -30,7 +30,7 @@ export type Value =
   | InstructionsValue
   | ArrayValue;
 
-export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '<=' | '<';
+export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '===' | '<=' | '<';
 
 export type AssignmentOperator = '=';
 

@@ -118,14 +118,31 @@ export function toInstructions<F extends Function>(
     }
     case 'Identifier':
       return [['LOAD', value.name]];
-    case 'CallExpression':
+    case 'CallExpression': {
       return [
         ...value.arguments.flatMap(toInstructions),
         ...toInstructions(value.callee),
         'CALL',
       ];
+    }
     case 'MemberExpression':
-      return [['LOAD', toPath(value)]];
+      if (value.object.type !== 'CallExpression') {
+        return [['LOAD', toPath(value)]];
+      } else {
+        return [
+          ...toInstructions(value.object),
+          [
+            'PUSH',
+            {
+              type: 'FUNCTION',
+              name: toPath(value.property),
+              parameters: ['action', 'items'],
+              body: [],
+            },
+          ],
+        ];
+      }
+
     case 'AssignmentExpression': {
       const path = toPath(value.left);
       const result = toInstructions(value.right);
@@ -213,12 +230,12 @@ export function simpleMap<A, B>(items: A[], mapper: (item: A) => B): B | B[] {
 }
 
 export function valueToString(value: Value): string {
-  if (
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    typeof value === 'string'
-  ) {
+  if (typeof value === 'number' || typeof value === 'boolean') {
     return value.toString();
+  }
+
+  if (typeof value === 'string') {
+    return `"${value}"`;
   }
 
   if (value === undefined) {
@@ -279,7 +296,8 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
         case '/':
         case '<=':
         case '<':
-        case '==': {
+        case '==':
+        case '===': {
           const b = stack.pop();
           const a = stack.pop();
           stack.push(`(${a} ${command} ${b})`);
@@ -295,7 +313,7 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
         case 'CALL': {
           const f = stack.pop();
           const args = stack.pop();
-          stack.push(`${f}(${args})`);
+          stack.push(`${f}(${args === '[]' ? '' : args})`);
           break;
         }
         default:

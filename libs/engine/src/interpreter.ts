@@ -9,17 +9,18 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { toCode, toInstructions, toJSFunction } from './utils';
+import { toInstructions, toJSFunction } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
 
-const nativeFuncRegex = /function ([a-z]*)\(\) { \[native code\] }/gm;
+const nativeFuncRegex = /function ([a-zA-Z]*)\(\) { \[native code\] }/gm;
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
   '*': (a, b) => a * b,
   '/': (a, b) => a / b,
+  '===': (a, b) => a === b,
   '==': (a, b) => a == b,
   '<=': (a, b) => a <= b,
   '<': (a, b) => a < b,
@@ -72,6 +73,7 @@ export class Interpreter {
         case '*':
         case '/':
         case '==':
+        case '===':
         case '<=': {
           const b = this.stack.pop() as number;
           const a = this.stack.pop() as number;
@@ -91,12 +93,12 @@ export class Interpreter {
         }
         case 'CALL': {
           const func = this.stack.pop() as FunctionValue;
-          if (func.native && func.name === 'filter') {
-            const array = get(this.globals, func.native);
+          if (func.name === 'filter' || func.name === 'forEach') {
+            const array = this.stack.pop() as ArrayValue;
             const checkerValue = this.stack.pop() as FunctionValue;
             const checkerFunction = toJSFunction(checkerValue);
-            const filtered = array.filter(checkerFunction);
-            this.stack.push({ type: 'ARRAY', items: filtered });
+            const result = (array.items[func.name] as any)(checkerFunction);
+            this.stack.push({ type: 'ARRAY', items: result ?? [] });
             return;
           } else {
             for (const arg of reverse(func.parameters)) {
@@ -126,19 +128,24 @@ export class Interpreter {
         if (typeof value === 'function') {
           const code = value.toString() as string;
           const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
-
           const nativeMatch = nativeFuncRegex.exec(code);
           if (nativeMatch?.length && nativeMatch.length > 0) {
             const methodName = nativeMatch[1];
             const entity = get(this.globals, entityPath);
             if (isArray(entity)) {
-              this.stack.push({
-                type: 'FUNCTION',
-                name: methodName,
-                native: entityPath,
-                parameters: [''],
-                body: [],
-              });
+              this.stack.push(
+                {
+                  type: 'ARRAY',
+                  items: entity,
+                },
+                {
+                  type: 'FUNCTION',
+                  name: methodName,
+                  native: entityPath,
+                  parameters: ['predicate', 'items'],
+                  body: [],
+                }
+              );
             }
           } else {
             const func = replaceThis(

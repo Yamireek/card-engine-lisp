@@ -18,6 +18,7 @@ import {
 import React, { useMemo, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import {
+  Game,
   Instruction,
   Interpreter,
   toCode,
@@ -92,7 +93,7 @@ export const InfoPanel = (
 export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
     //'(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
-    'for(const i of obj.a) { obj.b = obj.b + i }'
+    `game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
   );
 
   const instructions = useMemo(() => {
@@ -103,8 +104,13 @@ export const InterpreterApp = observer(() => {
     }
   }, [code]);
 
+  const game = new Game();
+  //game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
+  //game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
+  game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
+
   const interpreter = useMemo(
-    () => new Interpreter(instructions, { obj: { a: [1, 2, 3], b: 0 } }, true),
+    () => new Interpreter(instructions, { game }, true),
     [instructions]
   );
 

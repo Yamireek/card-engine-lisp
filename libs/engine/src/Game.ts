@@ -25,18 +25,10 @@ export class Game extends Entity<'game'> {
     this.card[card.id] = card;
   }
 
-  targetCard(predicate: (c: Card) => boolean, action: (c: Card) => void) {
-    const cards = this.cards.filter((c3) => predicate(c3));
-    for (const card of cards) {
-      action(card);
-    }
-  }
-
   run() {
-    this.targetCard(
-      (c1) => c1.props.type === 'enemy',
-      (c2) => c2.dealDamage(1)
-    );
+    this.cards
+      .filter((c) => c.props.type === 'enemy')
+      .forEach((c) => c.dealDamage(1));
   }
 }
 
