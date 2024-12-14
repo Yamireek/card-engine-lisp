@@ -9,11 +9,9 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { toInstructions, toJSFunction } from './utils';
+import { toJSFunction, toValue } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
-
-const nativeFuncRegex = /function ([a-zA-Z]*)\(\) { \[native code\] }/gm;
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -25,31 +23,6 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '<=': (a, b) => a <= b,
   '<': (a, b) => a < b,
 };
-
-function replaceThis(path: string, ins: Instruction): Instruction {
-  if (typeof ins === 'string') {
-    return ins;
-  }
-
-  switch (ins[0]) {
-    case 'SAVE':
-    case 'LOAD': {
-      return [ins[0], ins[1].replace('this.', path + '.')];
-    }
-    case 'PUSH': {
-      const v = ins[1];
-      if (typeof v === 'object' && v.type === 'FUNCTION') {
-        return [
-          'PUSH',
-          { ...v, body: v.body.map((i) => replaceThis(path, i)) },
-        ];
-      }
-      return ins;
-    }
-    default:
-      return ins;
-  }
-}
 
 export class Interpreter {
   public stack: Value[] = [];
@@ -93,23 +66,14 @@ export class Interpreter {
         }
         case 'CALL': {
           const func = this.stack.pop() as FunctionValue;
-          if (func.name === 'filter' || func.name === 'forEach') {
-            const array = this.stack.pop() as ArrayValue;
-            const checkerValue = this.stack.pop() as FunctionValue;
-            const checkerFunction = toJSFunction(checkerValue);
-            const result = (array.items[func.name] as any)(checkerFunction);
-            this.stack.push({ type: 'ARRAY', items: result ?? [] });
-            return;
-          } else {
-            for (const arg of reverse(func.parameters)) {
-              const value = this.stack.pop();
-              if (value) {
-                this.globals[arg] = value;
-              }
+          for (const arg of reverse(func.parameters)) {
+            const value = this.stack.pop();
+            if (value) {
+              this.globals[arg] = value;
             }
-            this.instructions.unshift(...func.body);
-            return;
           }
+          this.instructions.unshift(...func.body);
+          return;
         }
         default:
           return `unknown instruction: ${ins}`;
@@ -122,48 +86,45 @@ export class Interpreter {
         this.stack.push(value);
         return;
       }
+      case 'CALL': {
+        if (ins.length === 3) {
+          const path = ins[1] as string;
+          const property = ins[2] as string;
+          const entity = get(this.globals, path) as any;
+
+          if (isArray(entity)) {
+            const lambda = this.stack.pop() as any;
+            const predicate = toJSFunction(lambda);
+            const result = entity[property as any](predicate);
+            this.stack.push(toValue(result));
+            return;
+          } else {
+            const method = entity[property];
+            const func = toValue(method);
+            this.globals['this'] = entity;
+            this.stack.push(func);
+            this.instructions.push('CALL');
+            return;
+          }
+        } else {
+          const property = ins[1] as string;
+          const entity = this.stack.pop() as ArrayValue;
+
+          if (entity.type === 'ARRAY') {
+            const lambda = this.stack.pop() as any;
+            const predicate = toJSFunction(lambda);
+            const result = (entity.items as any)[property as any](predicate);
+            this.stack.push(toValue(result));
+            return;
+          } else {
+            throw new Error('not implemented');
+          }
+        }
+      }
       case 'LOAD': {
         const path = ins[1];
         const value = get(this.globals, path);
-        if (typeof value === 'function') {
-          const code = value.toString() as string;
-          const entityPath = path.slice(0, path.lastIndexOf('.')) || path;
-          const nativeMatch = nativeFuncRegex.exec(code);
-          if (nativeMatch?.length && nativeMatch.length > 0) {
-            const methodName = nativeMatch[1];
-            const entity = get(this.globals, entityPath);
-            if (isArray(entity)) {
-              this.stack.push(
-                {
-                  type: 'ARRAY',
-                  items: entity,
-                },
-                {
-                  type: 'FUNCTION',
-                  name: methodName,
-                  native: entityPath,
-                  parameters: ['predicate', 'items'],
-                  body: [],
-                }
-              );
-            }
-          } else {
-            const func = replaceThis(
-              entityPath,
-              toInstructions(
-                code.startsWith('(') ? code : `function ${code}`
-              )[0]
-            ) as any;
-            this.stack.push(func[1]);
-          }
-        } else {
-          if (isArray(value)) {
-            this.stack.push({ type: 'ARRAY', items: value });
-          } else {
-            this.stack.push(value);
-          }
-        }
-
+        this.stack.push(toValue(value));
         return;
       }
       case 'SAVE': {

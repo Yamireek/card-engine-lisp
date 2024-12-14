@@ -72,7 +72,10 @@ export const InstructionView = (props: { i: Instruction }) => {
   return (
     <Chip
       avatar={<Avatar>{props.i[0].slice(0, 1)}</Avatar>}
-      label={valueToString(props.i[1])}
+      label={props.i
+        .slice(1)
+        .flatMap((v) => (v ? valueToString(v) : []))
+        .join(', ')}
     />
   );
 };
@@ -94,6 +97,8 @@ export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
     //'(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
     `game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
+    //`game.cards.filter((c) => c.props.type === 'enemy')`
+    //`game.cards.forEach((c) => c.dealDamage(1))`
   );
 
   const instructions = useMemo(() => {

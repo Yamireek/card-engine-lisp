@@ -27,8 +27,8 @@ export class Game extends Entity<'game'> {
 
   run() {
     this.cards
-      .filter((c) => c.props.type === 'enemy')
-      .forEach((c) => c.dealDamage(1));
+      .filter((cf) => cf.props.type === 'enemy')
+      .forEach((ca) => ca.dealDamage(1));
   }
 }
 

@@ -3,6 +3,7 @@ import { parse } from 'meriyah';
 import { isArray } from 'lodash';
 import {
   Expression,
+  MemberExpression,
   Parameter,
   PrivateIdentifier,
   Program,
@@ -119,11 +120,30 @@ export function toInstructions<F extends Function>(
     case 'Identifier':
       return [['LOAD', value.name]];
     case 'CallExpression': {
-      return [
-        ...value.arguments.flatMap(toInstructions),
-        ...toInstructions(value.callee),
-        'CALL',
-      ];
+      if (value.callee.type === 'MemberExpression') {
+        const me = value.callee as MemberExpression;
+        if (
+          me.object.type === 'Identifier' ||
+          me.object.type === 'MemberExpression'
+        ) {
+          const obj = toPath(me.object);
+          const prop = toPath(me.property);
+          return [
+            ...value.arguments.flatMap(toInstructions),
+            ['CALL', obj, prop],
+          ];
+        } else {
+          const params = value.arguments.flatMap(toInstructions);
+          const calle = toInstructions(me.object);
+          return [...params, ...calle, ['CALL', toPath(me.property)]];
+        }
+      } else {
+        return [
+          ...value.arguments.flatMap(toInstructions),
+          ...toInstructions(value.callee),
+          'CALL',
+        ];
+      }
     }
     case 'MemberExpression':
       if (value.object.type !== 'CallExpression') {
@@ -320,25 +340,30 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
           return 'unknown:' + JSON.stringify(command);
       }
     } else {
-      const [operator, arg] = command;
+      const [operator, ...args] = command as any;
 
       switch (operator) {
         case 'PUSH':
           stack.push(valueToString(command[1]));
           break;
         case 'LOAD': {
-          stack.push(arg);
+          stack.push(args[0]);
           break;
         }
         case 'SAVE': {
           const v = stack.pop() as string;
-          stack.push(`${arg} = ${v}`);
+          stack.push(`${args[0]} = ${v}`);
           break;
         }
         case 'ITERATE': {
           const path = stack.pop();
           const f = stack.pop();
           stack.push(`${path}.forEach(${f})`);
+          break;
+        }
+        case 'CALL': {
+          const a = stack.pop();
+          stack.push(`${args[0]}.${args[1]}(${a === '[]' ? '' : a})`);
           break;
         }
         default:
@@ -368,4 +393,39 @@ export function keys<TK extends string | number, TI>(
   return Object.keys(records).filter(
     (k) => records[k as TK] !== undefined
   ) as TK[];
+}
+
+export function toValue(input: unknown): Value {
+  if (isArray(input)) {
+    return {
+      type: 'ARRAY',
+      items: input.map(toValue),
+    };
+  }
+
+  if (
+    typeof input === 'boolean' ||
+    typeof input === 'number' ||
+    typeof input === 'string'
+  ) {
+    return input;
+  }
+
+  if (typeof input === 'function') {
+    const code = input.toString();
+    const parsed = toInstructions(
+      code.startsWith('(') ? code : `function ${code}`
+    ) as any;
+    return parsed[0][1];
+  }
+
+  if (typeof input === 'object') {
+    return input as any;
+  }
+
+  if (input === undefined) {
+    return 'undefined';
+  }
+
+  throw new Error('unknown input value: ' + JSON.stringify(input));
 }
