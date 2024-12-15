@@ -11,6 +11,7 @@ import {
   VariableDeclarator,
 } from 'meriyah/dist/src/estree';
 import { BinaryOperator, FunctionValue, Instruction, Value } from './types';
+import { Entity } from './Game';
 
 export function asArray<T>(items: T | T[]): T[] {
   if (isArray(items)) {
@@ -276,6 +277,10 @@ export function valueToString(value: Value): string {
     return `[${value.items.map(valueToString).join(', ')}]`;
   }
 
+  if (value.type === 'REFERENCE') {
+    return `${value.entity}[${value.id}]`;
+  }
+
   return `unknown value: ${JSON.stringify(value)}`;
 }
 
@@ -286,6 +291,10 @@ export function valueToJs(value: Value): any {
     typeof value === 'string'
   ) {
     return value;
+  }
+
+  if (value === undefined) {
+    return undefined;
   }
 
   if (value.type === 'ARRAY') {
@@ -395,6 +404,30 @@ export function keys<TK extends string | number, TI>(
   ) as TK[];
 }
 
+export function fromValue(value: Value, game: any): any {
+  if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'string'
+  ) {
+    return value;
+  }
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value.type === 'ARRAY') {
+    return value.items.map((v) => fromValue(v, game));
+  }
+
+  if (value.type === 'REFERENCE') {
+    return game[value.entity][value.id];
+  }
+
+  throw new Error('not implemented');
+}
+
 export function toValue(input: unknown): Value {
   if (isArray(input)) {
     return {
@@ -417,6 +450,14 @@ export function toValue(input: unknown): Value {
       code.startsWith('(') ? code : `function ${code}`
     ) as any;
     return parsed[0][1];
+  }
+
+  if (input instanceof Entity) {
+    return {
+      type: 'REFERENCE',
+      entity: input.entity,
+      id: input.id,
+    };
   }
 
   if (typeof input === 'object') {

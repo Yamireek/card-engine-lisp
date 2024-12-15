@@ -22,13 +22,21 @@ export type ArrayValue = {
   items: Value[];
 };
 
+export type ReferenceValue = {
+  type: 'REFERENCE';
+  entity: string;
+  id: number;
+};
+
 export type Value =
   | number
   | boolean
   | string
+  | undefined
   | FunctionValue
   | InstructionsValue
-  | ArrayValue;
+  | ArrayValue
+  | ReferenceValue;
 
 export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '===' | '<=' | '<';
 

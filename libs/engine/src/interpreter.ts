@@ -9,7 +9,7 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { toJSFunction, toValue } from './utils';
+import { fromValue, toJSFunction, toValue } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
 
@@ -108,12 +108,15 @@ export class Interpreter {
           }
         } else {
           const property = ins[1] as string;
-          const entity = this.stack.pop() as ArrayValue;
+          const entity = fromValue(
+            this.stack.pop(),
+            this.globals['game']
+          ) as any[];
 
-          if (entity.type === 'ARRAY') {
+          if (isArray(entity)) {
             const lambda = this.stack.pop() as any;
             const predicate = toJSFunction(lambda);
-            const result = (entity.items as any)[property as any](predicate);
+            const result = entity[property as any](predicate);
             this.stack.push(toValue(result));
             return;
           } else {
