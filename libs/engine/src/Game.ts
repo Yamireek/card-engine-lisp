@@ -7,12 +7,26 @@ export abstract class Entity<T extends string> {
   constructor(public id: Flavor<number, T>, public entity: T) {}
 }
 
+export abstract class Agent {
+  abstract chooseNumber(min: number, max: number): number;
+}
+
+export class StaticAgent extends Agent {
+  constructor(public choices: any[]) {
+    super();
+  }
+
+  override chooseNumber(): number {
+    return this.choices.pop();
+  }
+}
+
 export class Game extends Entity<'game'> {
   nextId = 1;
 
   card: Record<CardId, Card> = {};
 
-  constructor() {
+  constructor(public agent: Agent) {
     super(0, 'game');
   }
 
@@ -28,7 +42,7 @@ export class Game extends Entity<'game'> {
   run() {
     this.cards
       .filter((cf) => cf.props.type === 'enemy')
-      .forEach((ca) => ca.dealDamage(1));
+      .forEach((ca) => ca.dealDamage(this.agent.chooseNumber(1, 5)));
   }
 }
 
@@ -48,7 +62,7 @@ type Tokens = Record<Token, number>;
 export class Card extends Entity<'card'> {
   token: Tokens = { damage: 0, progress: 0, resource: 0 };
 
-  constructor(game: Game, public props: CardProps) {
+  constructor(public game: Game, public props: CardProps) {
     super(game.nextId++, 'card');
   }
 

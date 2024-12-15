@@ -48,7 +48,8 @@ export type Instruction =
   | '?' // 3 args
   | 'RETURN'
   | 'CALL' // x args
-  | ['CALL', string, string?]
+  | ['CALL', string, string, number]
+  | ['CALL', string, number]
   | ['PUSH', Value]
   | ['LOAD', string]
   | ['SAVE', string]

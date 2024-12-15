@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { get, isArray, set } from 'lodash';
 import {
@@ -87,7 +88,7 @@ export class Interpreter {
         return;
       }
       case 'CALL': {
-        if (ins.length === 3) {
+        if (ins.length === 4) {
           const path = ins[1] as string;
           const property = ins[2] as string;
           const entity = get(this.globals, path) as any;
@@ -115,7 +116,7 @@ export class Interpreter {
 
           if (isArray(entity)) {
             const lambda = this.stack.pop() as any;
-            const predicate = toJSFunction(lambda);
+            const predicate = toJSFunction(lambda).bind(entity) as Function;
             const result = entity[property as any](predicate);
             this.stack.push(toValue(result));
             return;

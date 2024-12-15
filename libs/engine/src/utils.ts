@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { parse } from 'meriyah';
 import { isArray } from 'lodash';
@@ -131,12 +132,16 @@ export function toInstructions<F extends Function>(
           const prop = toPath(me.property);
           return [
             ...value.arguments.flatMap(toInstructions),
-            ['CALL', obj, prop],
+            ['CALL', obj, prop, value.arguments.length],
           ];
         } else {
           const params = value.arguments.flatMap(toInstructions);
           const calle = toInstructions(me.object);
-          return [...params, ...calle, ['CALL', toPath(me.property)]];
+          return [
+            ...params,
+            ...calle,
+            ['CALL', toPath(me.property), value.arguments.length],
+          ];
         }
       } else {
         return [
@@ -371,8 +376,14 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
           break;
         }
         case 'CALL': {
-          const a = stack.pop();
-          stack.push(`${args[0]}.${args[1]}(${a === '[]' ? '' : a})`);
+          const parameters: string[] = [];
+          if (args.length === 4) {
+            repeat(args[3], () => parameters.push(stack.pop()!));
+          } else {
+            repeat(args[2], () => parameters.push(stack.pop()!));
+          }
+          parameters.reverse();
+          stack.push(`${args[0]}.${args[1]}(${parameters.join(', ')})`);
           break;
         }
         default:
@@ -469,4 +480,10 @@ export function toValue(input: unknown): Value {
   }
 
   throw new Error('unknown input value: ' + JSON.stringify(input));
+}
+
+export function repeat(amount: number, action: () => void) {
+  for (let i = 0; i < amount; i++) {
+    action();
+  }
 }

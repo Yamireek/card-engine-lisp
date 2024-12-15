@@ -1,9 +1,9 @@
-import { Game } from './Game';
+import { Game, StaticAgent } from './Game';
 import { Interpreter } from './interpreter';
 import { toInstructions } from './utils';
 
 it('create game', () => {
-  const game = new Game();
+  const game = new Game(new StaticAgent([]));
   game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
   game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
   game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
@@ -12,7 +12,7 @@ it('create game', () => {
 });
 
 it('run method', () => {
-  const game = new Game();
+  const game = new Game(new StaticAgent([1]));
   game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
   game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
   game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
@@ -25,7 +25,7 @@ it('run method', () => {
 });
 
 it('interpret method', () => {
-  const game = new Game();
+  const game = new Game(new StaticAgent([1]));
   game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
   game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
   game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
