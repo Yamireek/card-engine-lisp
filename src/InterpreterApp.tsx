@@ -21,14 +21,13 @@ import {
   Game,
   Instruction,
   Interpreter,
+  StaticAgent,
   toCode,
   toInstructions,
   Value,
   valueToString,
 } from '@card-engine-liesp/engine';
 import { observer } from 'mobx-react-lite';
-import JsonView from '@uiw/react-json-view';
-import { monokaiTheme } from '@uiw/react-json-view/monokai';
 import { reverse } from 'lodash/fp';
 
 const codeheight = 300;
@@ -44,11 +43,13 @@ export const ValueView = (props: { v: Value }) => {
       );
     } else {
       return (
-        <JsonView
-          value={props.v}
-          style={monokaiTheme}
-          enableClipboard={false}
-        />
+        <Button
+          onClick={() => {
+            console.log(props.v);
+          }}
+        >
+          unknown object
+        </Button>
       );
     }
   } else {
@@ -74,7 +75,7 @@ export const InstructionView = (props: { i: Instruction }) => {
       avatar={<Avatar>{props.i[0].slice(0, 1)}</Avatar>}
       label={props.i
         .slice(1)
-        .flatMap((v) => (v ? valueToString(v) : []))
+        .flatMap((v) => valueToString(v))
         .join(', ')}
     />
   );
@@ -96,9 +97,10 @@ export const InfoPanel = (
 export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
     //'(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
-    `game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
+    //`game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
     //`game.cards.filter((c) => c.props.type === 'enemy')`
     //`game.cards.forEach((c) => c.dealDamage(1))`
+    `game.run()`
   );
 
   const instructions = useMemo(() => {
@@ -109,15 +111,13 @@ export const InterpreterApp = observer(() => {
     }
   }, [code]);
 
-  const game = new Game();
-  //game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
-  //game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
-  game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
-
-  const interpreter = useMemo(
-    () => new Interpreter(instructions, { game }, true),
-    [instructions]
-  );
+  const interpreter = useMemo(() => {
+    const game = new Game(new StaticAgent([1]));
+    //game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
+    //game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
+    game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
+    return new Interpreter(instructions, game, true);
+  }, [instructions]);
 
   return (
     <React.Fragment>
@@ -188,11 +188,11 @@ export const InterpreterApp = observer(() => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Object.keys(interpreter.globals).map((key) => (
+                {Object.keys(interpreter.vars).map((key) => (
                   <TableRow>
                     <TableCell>{key}</TableCell>
                     <TableCell>
-                      <ValueView v={interpreter.globals[key]} />
+                      <ValueView v={interpreter.vars[key]} />
                     </TableCell>
                   </TableRow>
                 ))}

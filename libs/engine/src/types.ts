@@ -6,8 +6,7 @@ export type Flavor<T, FlavorT> = T & Flavoring<FlavorT>;
 
 export type FunctionValue = {
   type: 'FUNCTION';
-  name: string;
-  native?: string;
+  name: string;  
   parameters: string[];
   body: Instruction[];
 };

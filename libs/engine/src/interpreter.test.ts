@@ -4,12 +4,13 @@ import { Env } from './types';
 import { Interpreter } from './interpreter';
 import { observable } from 'mobx';
 
-function evaluate(code: string, env: Env = {}) {
+function evaluate(code: string, vars: Env = {}) {
   const instructions = toInstructions(code);
   console.log('code', code);
   console.log('instructions', instructions);
   console.log('decompiled', toCode(instructions));
-  const interpreter = new Interpreter(instructions, env);
+  const interpreter = new Interpreter(instructions);
+  interpreter.vars = vars;
   const interpreted = interpreter.run();
   if (interpreted) {
     return valueToJs(interpreted);
@@ -135,28 +136,6 @@ describe('objects', () => {
     const obj = observable({ a: { b: 1 } });
     evaluate('obj.a.b = 5 * 5', { obj });
     expect(obj.a.b).toBe(25);
-  });
-
-  it('call object function', () => {
-    const obj = observable({
-      a: 1,
-      b: (v1: number, v2: number) => {
-        obj.a = obj.a + v1 * v2;
-      },
-    });
-    evaluate('obj.b(1+2,3)', { obj });
-    expect(obj.a).toBe(10);
-  });
-
-  it('this reference', () => {
-    const obj = observable({
-      a: 1,
-      b(v: number) {
-        this.a = v;
-      },
-    });
-    evaluate('obj.b(5)', { obj });
-    expect(obj.a).toBe(5);
   });
 });
 

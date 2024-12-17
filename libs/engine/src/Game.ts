@@ -42,7 +42,7 @@ export class Game extends Entity<'game'> {
   run() {
     this.cards
       .filter((cf) => cf.props.type === 'enemy')
-      .forEach((ca) => ca.dealDamage(this.agent.chooseNumber(1, 5)));
+      .forEach((ca) => ca.dealDamage(1));
   }
 }
 

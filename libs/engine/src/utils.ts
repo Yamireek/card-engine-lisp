@@ -433,10 +433,14 @@ export function fromValue(value: Value, game: any): any {
   }
 
   if (value.type === 'REFERENCE') {
-    return game[value.entity][value.id];
+    if (value.entity === 'game') {
+      return game;
+    } else {
+      return game[value.entity][value.id];
+    }
   }
 
-  throw new Error('not implemented');
+  return value;
 }
 
 export function toValue(input: unknown): Value {

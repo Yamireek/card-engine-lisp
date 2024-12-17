@@ -30,7 +30,7 @@ it('interpret method', () => {
   game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
   game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
 
-  const interpreter = new Interpreter(toInstructions('game.run()'), { game });
+  const interpreter = new Interpreter(toInstructions('game.run()'), game);
   interpreter.run();
 
   expect(game.card[1].token.damage).toBe(0);

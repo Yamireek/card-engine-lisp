@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { get, isArray, set } from 'lodash';
+import { get, isArray } from 'lodash';
 import {
   ArrayValue,
   BinaryOperator,
@@ -13,6 +13,7 @@ import {
 import { fromValue, toJSFunction, toValue } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
+import { Entity } from './Game';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -28,9 +29,11 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
 export class Interpreter {
   public stack: Value[] = [];
 
+  public vars: Env = {};
+
   constructor(
     public instructions: Instruction[],
-    public globals: Env = {},
+    public game?: Entity<'game'>,
     public observable = false
   ) {
     if (observable) {
@@ -70,7 +73,7 @@ export class Interpreter {
           for (const arg of reverse(func.parameters)) {
             const value = this.stack.pop();
             if (value) {
-              this.globals[arg] = value;
+              this.setValue(arg, value);
             }
           }
           this.instructions.unshift(...func.body);
@@ -91,50 +94,26 @@ export class Interpreter {
         if (ins.length === 4) {
           const path = ins[1] as string;
           const property = ins[2] as string;
-          const entity = get(this.globals, path) as any;
-
-          if (isArray(entity)) {
-            const lambda = this.stack.pop() as any;
-            const predicate = toJSFunction(lambda);
-            const result = entity[property as any](predicate);
-            this.stack.push(toValue(result));
-            return;
-          } else {
-            const method = entity[property];
-            const func = toValue(method);
-            this.globals['this'] = entity;
-            this.stack.push(func);
-            this.instructions.push('CALL');
-            return;
-          }
+          const entity = this.getValue(path);
+          this.call(entity, property);
+          return;
         } else {
           const property = ins[1] as string;
-          const entity = fromValue(
-            this.stack.pop(),
-            this.globals['game']
-          ) as any[];
-
-          if (isArray(entity)) {
-            const lambda = this.stack.pop() as any;
-            const predicate = toJSFunction(lambda).bind(entity) as Function;
-            const result = entity[property as any](predicate);
-            this.stack.push(toValue(result));
-            return;
-          } else {
-            throw new Error('not implemented');
-          }
+          const entity = fromValue(this.stack.pop(), this.game) as any[];
+          this.call(entity, property);
+          return;
         }
       }
       case 'LOAD': {
         const path = ins[1];
-        const value = get(this.globals, path);
+        const value = this.getValue(path);
         this.stack.push(toValue(value));
         return;
       }
       case 'SAVE': {
         const path = ins[1];
         const value = this.stack.pop();
-        set(this.globals, path, value);
+        this.setValue(path, value);
         return;
       }
       case 'ARRAY': {
@@ -157,6 +136,68 @@ export class Interpreter {
       default:
         throw new Error('unknown operator: ' + ins[0]);
     }
+  }
+
+  private call(entity: any, property: string) {
+    if (isArray(entity)) {
+      const lambda = this.stack.pop() as any;
+
+      switch (property) {
+        case 'filter': {
+          const predicate = toJSFunction(lambda) as any;
+          const result = entity.filter(predicate);
+          this.stack.push(toValue(result));
+          return;
+        }
+        case 'forEach': {
+          this.stack.push(...entity.flatMap((e) => [toValue(e), lambda]));
+          this.instructions.push(...entity.map(() => 'CALL' as const));
+          return;
+        }
+      }
+    } else {
+      const method = entity[property];
+      const func = toValue(method);
+      this.setValue('this', entity);
+      this.stack.push(func);
+      this.instructions.push('CALL');
+      return;
+    }
+  }
+
+  getValue(path: string): any {
+    if (path.startsWith('game')) {
+      return get(this, path);
+    }
+
+    if (path in this.vars) {
+      return fromValue(this.vars[path], this.game);
+    }
+
+    let result = this.vars;
+    const parts = path.split('.');
+    for (const part of parts) {
+      if (part in result) {
+        result = fromValue(result[part], this.game);
+      } else {
+        return undefined;
+      }
+    }
+
+    return result;
+  }
+
+  setValue(path: string, value: any) {
+    let result = this.vars;
+    const parts = path.split('.');
+    const property = parts.splice(parts.length - 1)[0];
+    for (const part of parts) {
+      if (part in result) {
+        result = fromValue(result[part], this.game);
+      }
+    }
+
+    result[property] = toValue(value);
   }
 
   step(): boolean {
