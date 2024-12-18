@@ -16,7 +16,7 @@ export class StaticAgent extends Agent {
     super();
   }
 
-  override chooseNumber(): number {
+  override chooseNumber(min: number, max: number): number {
     return this.choices.pop();
   }
 }
@@ -42,7 +42,7 @@ export class Game extends Entity<'game'> {
   run() {
     this.cards
       .filter((cf) => cf.props.type === 'enemy')
-      .forEach((ca) => ca.dealDamage(1));
+      .forEach((ca) => ca.dealDamage(this.agent.chooseNumber(1, 5)));
   }
 }
 

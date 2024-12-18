@@ -13,7 +13,7 @@ import {
 import { fromValue, toJSFunction, toValue } from './utils';
 import { makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
-import { Entity } from './Game';
+import { Agent, Entity, StaticAgent } from './Game';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -139,6 +139,18 @@ export class Interpreter {
   }
 
   private call(entity: any, property: string) {
+    if (entity instanceof StaticAgent) {
+      if (property === 'chooseNumber') {
+        const max = this.stack.pop() as number;
+        const min = this.stack.pop() as number;
+        const result = entity.chooseNumber(min, max);
+        this.stack.push(result);
+        return;
+      } else {
+        throw new Error('not implemented');
+      }
+    }
+
     if (isArray(entity)) {
       const lambda = this.stack.pop() as any;
 
