@@ -18,7 +18,7 @@ export class Game extends Entity<'game'> {
   }
 
   addCard(props: CardProps) {
-    const card = new Card(this, props);
+    const card = new Card(this, this.nextId++, props);
     this.card[card.id] = card;
   }
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { get, isArray } from 'lodash';
+import { get, isArray, mapValues } from 'lodash';
 import {
   ArrayValue,
   BinaryOperator,
@@ -9,12 +9,14 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { fromValue, toJSFunction, toValue } from './utils';
+import { fromValue, keys, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
 import { reverse } from 'ramda';
-import { Entity } from './entity/Entity';
 import { StaticAgent } from './agent/StaticAgent';
 import { InterpretedAgent } from './agent/InterpretedAgent';
+import { State } from './state/State';
+import { Agent } from './agent';
+import { Card, Game } from './entity';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -32,9 +34,34 @@ export class Interpreter {
 
   public vars: Env = {};
 
+  static fromJson(state: State, agent: Agent) {
+    const game = new Game(agent);
+    game.nextId = state.game.nextId;
+    for (const key of keys(state.game.card)) {
+      const card = state.game.card[key];
+      game.card[key] = Card.fromJson(game, card);
+    }
+    const interpreter = new Interpreter(state.instructions, game, false);
+    interpreter.stack = state.stack;
+    interpreter.vars = state.vars;
+    return interpreter;
+  }
+
+  toJson(): State {
+    return {
+      game: {
+        nextId: this.game.nextId,
+        card: mapValues(this.game.card, (card) => card.toJson()),
+      },
+      stack: this.stack,
+      vars: this.vars,
+      instructions: this.instructions,
+    };
+  }
+
   constructor(
     public instructions: Instruction[],
-    public game?: Entity<'game'>,
+    public game: Game,
     public observable = false
   ) {
     if (observable) {
