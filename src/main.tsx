@@ -5,6 +5,7 @@ import '@fontsource/roboto/700.css';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { InterpreterApp } from './InterpreterApp';
+import { BrowserRouter } from 'react-router';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
