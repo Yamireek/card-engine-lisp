@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  CssBaseline,
   Stack,
   Table,
   TableBody,
@@ -20,20 +19,21 @@ import {
 } from '@card-engine-liesp/engine';
 import { observer } from 'mobx-react-lite';
 import { reverse } from 'lodash/fp';
-import { ValueView } from './interpreter/ValueView';
-import { InfoPanel } from './interpreter/InfoPanel';
-import { InstructionView } from './interpreter/InstructionView';
-import { InterpreterDialogs } from './interpreter/InterpreterDialogs';
+import { ValueView } from './ValueView';
+import { InfoPanel } from './InfoPanel';
+import { InstructionView } from './InstructionView';
+import { InterpreterDialogs } from './InterpreterDialogs';
 
 const codeheight = 300;
 
-export const InterpreterApp = observer(() => {
+export const InterpreterView = observer(() => {
   const [code, setCode] = useState(
     //'(f => f(f))(f => n => n <= 1 ? 1 : n * f(f)(n - 1))(5)'
     //`game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
     //`game.cards.filter((c) => c.props.type === 'enemy')`
     //`game.cards.forEach((c) => c.dealDamage(1))`
-    `game.agent.chooseNumber(1,5) * game.agent.chooseNumber(1,5)`
+    //`game.agent.chooseNumber(1,5) * game.agent.chooseNumber(1,5)`
+    'game.run()'
   );
 
   const instructions = useMemo(() => {
@@ -54,7 +54,6 @@ export const InterpreterApp = observer(() => {
 
   return (
     <React.Fragment>
-      <CssBaseline />
       <InterpreterDialogs interpreter={interpreter} />
       <Box>
         <Box sx={{ height: codeheight, display: 'flex', flexDirection: 'row' }}>

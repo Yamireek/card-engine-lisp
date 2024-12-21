@@ -25,8 +25,6 @@ export const InterpreterDialogs = observer(
           } else {
             props.interpreter.choose(values);
           }
-
-          props.interpreter.run();
         }}
       />
     );

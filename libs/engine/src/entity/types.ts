@@ -1,4 +1,4 @@
-import { Flavor } from '../types';
+import { Flavor, Instruction, Value } from '../types';
 
 export type CardId = Flavor<number, 'card'>;
 
@@ -15,5 +15,19 @@ export type Token = 'damage' | 'progress' | 'resource';
 
 export type Tokens = Record<Token, number>;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type State = { counter: number };
+export type CardState = {
+  id: CardId;
+  props: CardProps;
+  tokens: Tokens;
+};
+
+export type GameState = {
+  nextId: number;
+  card: Record<CardId, CardState>;
+};
+
+export type State = {
+  game: GameState;
+  stack: Value[];
+  instructions: Instruction[];
+};

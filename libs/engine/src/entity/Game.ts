@@ -5,9 +5,9 @@ import { values } from '../utils';
 import { Agent } from '../agent/Agent';
 
 export class Game extends Entity<'game'> {
-  nextId = 1;
+  public nextId = 1;
 
-  card: Record<CardId, Card> = {};
+  public card: Record<CardId, Card> = {};
 
   constructor(public agent: Agent) {
     super(0, 'game');
