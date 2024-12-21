@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+ 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { get, isArray } from 'lodash';
 import {
@@ -11,9 +11,11 @@ import {
   Value,
 } from './types';
 import { fromValue, toJSFunction, toValue } from './utils';
-import { computed, makeAutoObservable, toJS } from 'mobx';
-import { objOf, reverse } from 'ramda';
-import { Agent, Entity, InterpretedAgent, StaticAgent } from './Game';
+import { makeAutoObservable } from 'mobx';
+import { reverse } from 'ramda';
+import { Entity } from './entity/Entity';
+import { StaticAgent } from './agent/StaticAgent';
+import { InterpretedAgent } from './agent/InterpretedAgent';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,

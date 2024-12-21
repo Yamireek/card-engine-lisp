@@ -6,7 +6,8 @@
     "start": "nx serve",
     "build": "nx build",
     "test": "nx test",
-    "test-ui": "npx vitest --ui --coverage --no-isolate --watch"
+    "test-ui": "npx vitest --ui --coverage --no-isolate --watch",
+    "lint": "nx run-many -t lint --max-warnings=0 --fix"
   },
   "private": true,
   "dependencies": {

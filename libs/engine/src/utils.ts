@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { parse } from 'meriyah';
@@ -12,7 +13,7 @@ import {
   VariableDeclarator,
 } from 'meriyah/dist/src/estree';
 import { BinaryOperator, FunctionValue, Instruction, Value } from './types';
-import { Entity } from './Game';
+import { Entity } from './entity/Entity';
 
 export function asArray<T>(items: T | T[]): T[] {
   if (isArray(items)) {

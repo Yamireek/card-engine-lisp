@@ -64,4 +64,5 @@ export type Instruction =
   | ['ARRAY', number]
   | ['ITERATE', string]; // 2 args, array + function
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Env = Record<string, any>;

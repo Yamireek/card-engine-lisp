@@ -1,6 +1,8 @@
-import { Game, InterpretedAgent, StaticAgent } from './Game';
-import { Interpreter } from './interpreter';
-import { toInstructions } from './utils';
+import { InterpretedAgent } from '../agent/InterpretedAgent';
+import { StaticAgent } from '../agent/StaticAgent';
+import { Interpreter } from '../interpreter';
+import { toInstructions } from '../utils';
+import { Game } from './Game';
 
 it('create game', () => {
   const game = new Game(new StaticAgent([]));
@@ -45,7 +47,7 @@ it('real agent', () => {
   game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
 
   const interpreter = new Interpreter(toInstructions('game.run()'), game);
-  const result = interpreter.run();
+  interpreter.run();
 
   expect(game.card[1].token.damage).toBe(0);
   expect(game.card[2].token.damage).toBe(0);
