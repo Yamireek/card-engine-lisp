@@ -1,6 +1,7 @@
 import { Entity } from './Entity';
-import { Tokens, CardProps, CardState, CardId } from './types';
+import { Tokens, CardProps, CardId } from './types';
 import { Game } from './Game';
+import { CardState } from '../state/State';
 
 export class Card extends Entity<'card'> {
   public override id: number;

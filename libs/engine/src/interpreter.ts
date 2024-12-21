@@ -61,7 +61,7 @@ export class Interpreter {
 
   constructor(
     public instructions: Instruction[],
-    public game: Game,
+    public game: Game = new Game(new StaticAgent([])),
     public observable = false
   ) {
     if (observable) {
@@ -260,6 +260,7 @@ export class Interpreter {
   step(): boolean {
     const next = this.instructions.shift();
     if (next) {
+      console.log('execute', next);
       this.execute(next);
       return true;
     } else {

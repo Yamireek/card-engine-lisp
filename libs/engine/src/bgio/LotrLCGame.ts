@@ -1,6 +1,8 @@
 import { ActivePlayers } from 'boardgame.io/core';
 import type { Game } from 'boardgame.io';
-import { State } from '../entity/types';
+import * as jsonpatch from 'fast-json-patch';
+import { State } from '../state/State';
+import { Operation } from 'fast-json-patch';
 
 export function LotrLCGame(
   setupClient?: State
@@ -17,13 +19,13 @@ export function LotrLCGame(
         return setupClient;
       }
 
-      return { counter: 0 };
+      throw new Error('need state from client or server');
     },
     minPlayers: 1,
     maxPlayers: 4,
     moves: {
-      test: (ctx: any) => {
-        ctx.G.counter += 1;
+      patch: (ctx: any, patches: Operation[]) => {
+        jsonpatch.applyPatch(ctx.G, patches);
       },
     },
     turn: {
