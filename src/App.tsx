@@ -6,6 +6,9 @@ import { createHashRouter, RouterProvider } from 'react-router';
 import { DialogProvider } from './dialogs/DialogsContext';
 import { SettingsPage } from './settings/SettingsPage';
 import { MenuPage } from './MenuPage';
+import { LobbyPage } from './bgio/LobbyPage';
+import { GamePage } from './game/GamePage';
+import { SingleSetupPage } from './game/SingleSetupPage';
 
 export const App = () => {
   const router = useMemo(
@@ -23,12 +26,12 @@ export const App = () => {
             />
           ),
         },
-        // {
-        //   path: '/single',
-        //   element: <SingleSetupPage />,
-        // },
-        // { path: '/lobby', element: <LobbyPage /> },
-        // { path: '/game', element: <GamePage /> },
+        {
+          path: '/single',
+          element: <SingleSetupPage />,
+        },
+        { path: '/lobby', element: <LobbyPage /> },
+        { path: '/game', element: <GamePage /> },
         { path: '/settings', element: <SettingsPage /> },
       ]),
     []

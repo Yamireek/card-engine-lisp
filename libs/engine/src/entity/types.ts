@@ -14,3 +14,6 @@ export type CardProps = {
 export type Token = 'damage' | 'progress' | 'resource';
 
 export type Tokens = Record<Token, number>;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type State = { counter: number };

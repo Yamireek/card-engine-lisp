@@ -7,7 +7,8 @@
     "build": "nx build",
     "test": "nx test",
     "test-ui": "npx vitest --ui --coverage --no-isolate --watch",
-    "lint": "nx run-many -t lint --max-warnings=0 --fix"
+    "lint": "nx run-many -t lint --max-warnings=0 --fix",
+    "server": "nx serve server"
   },
   "private": true,
   "dependencies": {
@@ -21,6 +22,7 @@
     "@types/lodash": "^4.17.13",
     "@types/ramda": "^0.30.2",
     "@uiw/react-json-view": "^2.0.0-alpha.30",
+    "boardgame.io": "^0.50.2",
     "lodash": "^4.17.21",
     "meriyah": "^6.0.3",
     "mobx": "^6.13.5",
