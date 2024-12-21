@@ -6,7 +6,7 @@ export type Flavor<T, FlavorT> = T & Flavoring<FlavorT>;
 
 export type FunctionValue = {
   type: 'FUNCTION';
-  name: string;  
+  name: string;
   parameters: string[];
   body: Instruction[];
 };
@@ -27,6 +27,14 @@ export type ReferenceValue = {
   id: number;
 };
 
+export type ChoiceValue = {
+  type: 'CHOICE';
+  title: string;
+  options: Array<{ label: string; value: Value }>;
+  min: number;
+  max: number;
+};
+
 export type Value =
   | number
   | boolean
@@ -35,7 +43,8 @@ export type Value =
   | FunctionValue
   | InstructionsValue
   | ArrayValue
-  | ReferenceValue;
+  | ReferenceValue
+  | ChoiceValue;
 
 export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '===' | '<=' | '<';
 

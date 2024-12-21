@@ -21,6 +21,12 @@ export class StaticAgent extends Agent {
   }
 }
 
+export class InterpretedAgent extends Agent {
+  override chooseNumber(min: number, max: number): number {
+    throw new Error('Method not implemented.');
+  }
+}
+
 export class Game extends Entity<'game'> {
   nextId = 1;
 

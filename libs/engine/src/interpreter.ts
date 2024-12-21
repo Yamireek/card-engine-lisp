@@ -11,9 +11,9 @@ import {
   Value,
 } from './types';
 import { fromValue, toJSFunction, toValue } from './utils';
-import { makeAutoObservable, toJS } from 'mobx';
+import { computed, makeAutoObservable, toJS } from 'mobx';
 import { reverse } from 'ramda';
-import { Agent, Entity, StaticAgent } from './Game';
+import { Agent, Entity, InterpretedAgent, StaticAgent } from './Game';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '+': (a, b) => a + b,
@@ -42,7 +42,6 @@ export class Interpreter {
   }
 
   private execute(ins: Instruction) {
-    console.log('execute', toJS(ins));
     if (typeof ins === 'string') {
       switch (ins) {
         case '+':
@@ -149,6 +148,24 @@ export class Interpreter {
       } else {
         throw new Error('not implemented');
       }
+    } else if (entity instanceof InterpretedAgent) {
+      if (property === 'chooseNumber') {
+        const max = this.stack.pop() as number;
+        const min = this.stack.pop() as number;
+        this.stack.push({
+          type: 'CHOICE',
+          min: 1,
+          max: 1,
+          title: 'Choose number',
+          options: Array.from({ length: max - min + 1 }).map((_, i) => ({
+            label: (min + i).toString(),
+            value: min + i,
+          })),
+        });
+        return;
+      } else {
+        throw new Error('not implemented');
+      }
     }
 
     if (isArray(entity)) {
@@ -222,14 +239,28 @@ export class Interpreter {
     }
   }
 
+  get choices() {
+    return this.stack.filter(
+      (v) => typeof v === 'object' && v.type === 'CHOICE'
+    );
+  }
+
   run() {
     let step = 0;
     while (step < 1000 && this.step()) {
       step++;
+
+      if (this.choices.length > 0) {
+        break;
+      }
     }
 
     if (step === 1000) {
       throw new Error('too many steps');
+    }
+
+    if (this.choices.length > 0) {
+      return this.choices;
     }
 
     return this.getResult();
