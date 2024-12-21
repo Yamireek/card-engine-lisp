@@ -33,10 +33,13 @@
     "react": "18.3.1",
     "react-blockly": "^9.0.0",
     "react-dom": "18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-hook-form-mui": "^7.4.1",
     "react-inspector": "^6.0.2",
     "react-json-view": "^1.21.3",
     "react-object-view": "^0.3.5",
     "react-router": "^7.1.0",
+    "react-use": "^17.6.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {

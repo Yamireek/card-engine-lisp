@@ -4,7 +4,8 @@ import { SnackbarProvider } from 'notistack';
 import { useMemo } from 'react';
 import { createHashRouter, RouterProvider } from 'react-router';
 import { DialogProvider } from './dialogs/DialogsContext';
-import { InterpreterApp } from './InterpreterApp';
+import { SettingsPage } from './settings/SettingsPage';
+import { MenuPage } from './MenuPage';
 
 export const App = () => {
   const router = useMemo(
@@ -12,36 +13,23 @@ export const App = () => {
       createHashRouter([
         {
           path: '/',
-          element: <InterpreterApp />,
+          element: (
+            <MenuPage
+              items={[
+                { label: 'Singleplayer', link: '/#/single', icon: 'person' },
+                { label: 'Multiplayer', link: '/#/lobby', icon: 'group' },
+                { label: 'Settings', link: '/#/settings', icon: 'settings' },
+              ]}
+            />
+          ),
         },
-        // {
-        //   path: '/',
-        //   element: (
-        //     <MenuPage
-        //       items={[
-        //         { label: 'Singleplayer', link: '/#/single', icon: 'person' },
-        //         { label: 'Multiplayer', link: '/#/lobby', icon: 'group' },
-        //         {
-        //           label: 'Collection',
-        //           link: '/#/collection',
-        //           icon: 'collections',
-        //         },
-        //         { label: 'Settings', link: '/#/settings', icon: 'settings' },
-        //       ]}
-        //     />
-        //   ),
-        // },
         // {
         //   path: '/single',
         //   element: <SingleSetupPage />,
         // },
         // { path: '/lobby', element: <LobbyPage /> },
         // { path: '/game', element: <GamePage /> },
-        // {
-        //   path: '/collection',
-        //   element: <CollectionPage />,
-        // },
-        // { path: '/settings', element: <SettingsPage /> },
+        { path: '/settings', element: <SettingsPage /> },
       ]),
     []
   );
