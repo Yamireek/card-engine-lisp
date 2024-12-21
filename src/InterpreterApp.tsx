@@ -1,98 +1,31 @@
 import {
-  Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
-  Chip,
   CssBaseline,
   Stack,
-  SxProps,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  Typography,
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import {
   Game,
-  Instruction,
+  InterpretedAgent,
   Interpreter,
-  StaticAgent,
   toCode,
   toInstructions,
-  Value,
-  valueToString,
 } from '@card-engine-liesp/engine';
 import { observer } from 'mobx-react-lite';
 import { reverse } from 'lodash/fp';
+import { ValueView } from './interpreter/ValueView';
+import { InfoPanel } from './interpreter/InfoPanel';
+import { InstructionView } from './interpreter/InstructionView';
+import { InterpreterDialogs } from './interpreter/InterpreterDialogs';
 
 const codeheight = 300;
-
-export const ValueView = (props: { v: Value }) => {
-  if (typeof props.v === 'object') {
-    if ('type' in props.v) {
-      return (
-        <Chip
-          avatar={<Avatar>{props.v.type.slice(0, 1)}</Avatar>}
-          label={valueToString(props.v)}
-        />
-      );
-    } else {
-      return (
-        <Button
-          onClick={() => {
-            console.log(props.v);
-          }}
-        >
-          unknown object
-        </Button>
-      );
-    }
-  } else {
-    const type =
-      typeof props.v === 'number'
-        ? 'N'
-        : typeof props.v === 'boolean'
-        ? 'B'
-        : 'S';
-    return (
-      <Chip avatar={<Avatar>{type}</Avatar>} label={valueToString(props.v)} />
-    );
-  }
-};
-
-export const InstructionView = (props: { i: Instruction }) => {
-  if (typeof props.i === 'string') {
-    return <Chip label={props.i} />;
-  }
-
-  return (
-    <Chip
-      avatar={<Avatar>{props.i[0].slice(0, 1)}</Avatar>}
-      label={props.i
-        .slice(1)
-        .flatMap((v) => valueToString(v))
-        .join(', ')}
-    />
-  );
-};
-
-export const InfoPanel = (
-  props: React.PropsWithChildren<{ label: string; sx?: SxProps }>
-) => {
-  return (
-    <Card sx={props.sx}>
-      <CardContent>
-        <Typography variant="h6">{props.label}</Typography>
-        {props.children}
-      </CardContent>
-    </Card>
-  );
-};
 
 export const InterpreterApp = observer(() => {
   const [code, setCode] = useState(
@@ -100,19 +33,19 @@ export const InterpreterApp = observer(() => {
     //`game.cards.filter((c) => c.props.type === 'enemy').forEach((c) => c.dealDamage(1));`
     //`game.cards.filter((c) => c.props.type === 'enemy')`
     //`game.cards.forEach((c) => c.dealDamage(1))`
-    `game.run()`
+    `game.agent.chooseNumber(1,5) * game.agent.chooseNumber(1,5)`
   );
 
   const instructions = useMemo(() => {
     try {
       return toInstructions(code);
-    } catch (error: any) {
+    } catch (error) {
       return [error.message];
     }
   }, [code]);
 
   const interpreter = useMemo(() => {
-    const game = new Game(new StaticAgent([1]));
+    const game = new Game(new InterpretedAgent());
     //game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
     //game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
     game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
@@ -122,6 +55,7 @@ export const InterpreterApp = observer(() => {
   return (
     <React.Fragment>
       <CssBaseline />
+      <InterpreterDialogs interpreter={interpreter} />
       <Box>
         <Box sx={{ height: codeheight, display: 'flex', flexDirection: 'row' }}>
           <InfoPanel label="Program" sx={{ flexGrow: 1, margin: '4px' }}>
@@ -142,11 +76,7 @@ export const InterpreterApp = observer(() => {
             </Button>
             <Button
               onClick={() => {
-                const ref = setInterval(() => {
-                  if (!interpreter.step()) {
-                    clearInterval(ref);
-                  }
-                }, 100);
+                interpreter.run();
               }}
             >
               run

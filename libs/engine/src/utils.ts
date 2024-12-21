@@ -286,6 +286,10 @@ export function valueToString(value: Value): string {
     return `${value.entity}[${value.id}]`;
   }
 
+  if (value.type === 'CHOICE') {
+    return `chooose: ${value.options.map((o) => o.label).join(', ')}`;
+  }
+
   return `unknown value: ${JSON.stringify(value)}`;
 }
 

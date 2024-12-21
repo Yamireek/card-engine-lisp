@@ -12,7 +12,7 @@ import {
 } from './types';
 import { fromValue, toJSFunction, toValue } from './utils';
 import { computed, makeAutoObservable, toJS } from 'mobx';
-import { reverse } from 'ramda';
+import { objOf, reverse } from 'ramda';
 import { Agent, Entity, InterpretedAgent, StaticAgent } from './Game';
 
 const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
@@ -239,10 +239,8 @@ export class Interpreter {
     }
   }
 
-  get choices() {
-    return this.stack.filter(
-      (v) => typeof v === 'object' && v.type === 'CHOICE'
-    );
+  get choice() {
+    return this.stack.find((v) => typeof v === 'object' && v.type === 'CHOICE');
   }
 
   run() {
@@ -250,7 +248,7 @@ export class Interpreter {
     while (step < 1000 && this.step()) {
       step++;
 
-      if (this.choices.length > 0) {
+      if (this.choice) {
         break;
       }
     }
@@ -259,8 +257,8 @@ export class Interpreter {
       throw new Error('too many steps');
     }
 
-    if (this.choices.length > 0) {
-      return this.choices;
+    if (this.choice) {
+      return this.choice;
     }
 
     return this.getResult();
@@ -272,5 +270,16 @@ export class Interpreter {
     }
 
     return this.stack[0];
+  }
+
+  choose(value: Value | Value[]) {
+    const index = this.stack.findIndex(
+      (v) => typeof v === 'object' && v.type === 'CHOICE'
+    );
+    if (index >= 0) {
+      this.stack[index] = toValue(value);
+    } else {
+      throw new Error('no choice');
+    }
   }
 }
