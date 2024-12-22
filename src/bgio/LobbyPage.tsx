@@ -52,7 +52,7 @@ export const LobbyPage = () => {
           variant="contained"
           onClick={async () => {
             const matchId = await createMatch(
-              { type: 'new', playerCount: '1' },
+              { type: 'new', playerCount: '2' },
               lobby
             );
 

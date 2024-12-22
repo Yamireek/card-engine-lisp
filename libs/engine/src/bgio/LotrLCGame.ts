@@ -24,8 +24,8 @@ export function LotrLCGame(
     minPlayers: 1,
     maxPlayers: 4,
     moves: {
-      patch: (ctx: any, patches: Operation[]) => {
-        jsonpatch.applyPatch(ctx.G, patches);
+      patch: ({ G }, patches: Operation[]) => {
+        jsonpatch.applyPatch(G, patches);
       },
     },
     turn: {

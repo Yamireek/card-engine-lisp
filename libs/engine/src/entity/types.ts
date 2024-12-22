@@ -1,4 +1,4 @@
-import { Flavor, Instruction, Value } from '../types';
+import { Flavor } from '../types';
 
 export type CardId = Flavor<number, 'card'>;
 

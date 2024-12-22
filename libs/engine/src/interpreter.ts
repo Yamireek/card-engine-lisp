@@ -11,7 +11,7 @@ import {
 } from './types';
 import { fromValue, keys, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
-import { reverse } from 'ramda';
+import { clone, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
 import { InterpretedAgent } from './agent/InterpretedAgent';
 import { State } from './state/State';
@@ -35,15 +35,17 @@ export class Interpreter {
   public vars: Env = {};
 
   static fromJson(state: State, agent: Agent) {
+    const cloned = clone(state);
+
     const game = new Game(agent);
-    game.nextId = state.game.nextId;
-    for (const key of keys(state.game.card)) {
-      const card = state.game.card[key];
+    game.nextId = cloned.game.nextId;
+    for (const key of keys(cloned.game.card)) {
+      const card = cloned.game.card[key];
       game.card[key] = Card.fromJson(game, card);
     }
-    const interpreter = new Interpreter(state.instructions, game, false);
-    interpreter.stack = state.stack;
-    interpreter.vars = state.vars;
+    const interpreter = new Interpreter(cloned.instructions, game, false);
+    interpreter.stack = cloned.stack;
+    interpreter.vars = cloned.vars;
     return interpreter;
   }
 

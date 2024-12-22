@@ -1,9 +1,12 @@
-import { Interpreter } from '@card-engine-liesp/engine';
+import { Interpreter, Value } from '@card-engine-liesp/engine';
 import { observer } from 'mobx-react-lite';
 import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';
 
 export const InterpreterDialogs = observer(
-  (props: { interpreter: Interpreter }) => {
+  (props: {
+    interpreter: Interpreter;
+    onChoice: (v: Value | Value[]) => void;
+  }) => {
     const choice = props.interpreter.choice;
 
     if (!choice) {
@@ -21,9 +24,9 @@ export const InterpreterDialogs = observer(
         }))}
         onSubmit={(values) => {
           if (choice.max === 1) {
-            props.interpreter.choose(values[0]);
+            props.onChoice(values[0]);
           } else {
-            props.interpreter.choose(values);
+            props.onChoice(values);
           }
         }}
       />

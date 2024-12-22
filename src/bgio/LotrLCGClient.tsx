@@ -5,7 +5,6 @@ import { LotrLCGBoard } from './LotrLCGBoard';
 import { SetupParams } from './../game/types';
 import { LoadingDialog } from './../dialogs/LoadingDialog';
 import { LotrLCGame, State, toInstructions } from '@card-engine-liesp/engine';
-import { p } from 'react-router/dist/development/fog-of-war-DLtn2OLr';
 
 export function LotrLCGClient(setup: SetupParams) {
   if (setup.type === 'load') {
@@ -77,6 +76,7 @@ export function createNewGameState(): State {
     stack: [],
     vars: {},
     instructions: toInstructions('game.run()'),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 
   return state;
