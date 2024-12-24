@@ -29,7 +29,7 @@ export function LotrLCGClient(setup: SetupParams) {
   }
 
   if (setup.type === 'new') {
-    const state = createNewGameState();
+    const state = createNewGameState(setup);
 
     return Client({
       game: LotrLCGame(state),
@@ -52,7 +52,7 @@ export function LotrLCGClient(setup: SetupParams) {
   throw new Error('not implemented');
 }
 
-export function createNewGameState(): State {
+export function createNewGameState(setup: SetupParams): State {
   const state: State = {
     game: {
       nextId: 1,
@@ -76,7 +76,7 @@ export function createNewGameState(): State {
     stack: [],
     vars: {},
     instructions: toInstructions('game.run()'),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 
   return state;

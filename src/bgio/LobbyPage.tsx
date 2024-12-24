@@ -15,16 +15,20 @@ import { createNewGameState } from './LotrLCGClient';
 import { Matches } from './Matches';
 import { keys } from '@card-engine-liesp/engine';
 import { SetupParams } from './../game/types';
+import { GameSetupDialog } from './../game/GameSetupDialog';
+import { useDialogs } from './../dialogs/DialogsContext';
 
 export const GAME_NAME = 'LotrLCG';
 
 export const LobbyPage = () => {
   const settings = useSettings();
+  const navigate = useNavigate();
+  const d = useDialogs();
+
   const lobby = useMemo(
     () => new LobbyClient({ server: settings.value.serverUrl }),
     [settings.value.serverUrl]
   );
-  const navigate = useNavigate();
 
   if (!settings.value.playerName) {
     return (
@@ -51,10 +55,12 @@ export const LobbyPage = () => {
         <Button
           variant="contained"
           onClick={async () => {
-            const matchId = await createMatch(
-              { type: 'new', playerCount: '2' },
-              lobby
-            );
+            const params = await d.open({
+              component: GameSetupDialog,
+              action: async (r) => r,
+            });
+
+            const matchId = await createMatch(params, lobby);
 
             const credentials = await lobby.joinMatch(GAME_NAME, matchId, {
               playerName: settings.value.playerName,
@@ -93,7 +99,7 @@ async function createMatch(setup: SetupParams, lobby: LobbyClient) {
   }
 
   if (setup.type === 'new') {
-    const state = createNewGameState();
+    const state = createNewGameState(setup);
 
     const response = await lobby.createMatch('LotrLCG', {
       numPlayers: Number(setup.playerCount),
