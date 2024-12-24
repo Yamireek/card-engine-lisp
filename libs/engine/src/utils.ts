@@ -210,6 +210,20 @@ export function toInstructions<F extends Function>(
         ['ARRAY', length],
       ];
     }
+    case 'ObjectExpression': {
+      const properties = value.properties.map((p) =>
+        p.type === 'Property'
+          ? p.key.type === 'Identifier'
+            ? { name: p.key.name, value: p.value }
+            : undefined
+          : undefined
+      );
+
+      return [
+        ...properties.flatMap((p) => (p ? toInstructions(p.value) : [])),
+        ['OBJECT', properties.flatMap((p) => (p ? p.name : []))],
+      ];
+    }
     case 'VariableDeclaration': {
       return value.declarations.flatMap(toInstructions);
     }
@@ -363,7 +377,7 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
 
       switch (operator) {
         case 'PUSH':
-          stack.push(valueToString(command[1]));
+          stack.push(valueToString(command[1] as any));
           break;
         case 'LOAD': {
           stack.push(args[0]);

@@ -3,6 +3,7 @@ import { Card } from './Card';
 import { Entity } from './Entity';
 import { values } from '../utils';
 import { Agent } from '../agent/Agent';
+import { ScenarioSetupData } from '../state/GameSetupData';
 
 export class Game extends Entity<'game'> {
   public nextId = 1;
@@ -26,5 +27,9 @@ export class Game extends Entity<'game'> {
     this.cards
       .filter((cf) => cf.props.type === 'enemy')
       .forEach((ca) => ca.dealDamage(this.agent.chooseNumber(1, 5)));
+  }
+
+  start(data: ScenarioSetupData) {
+    // todo
   }
 }

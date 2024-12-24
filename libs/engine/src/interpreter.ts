@@ -154,6 +154,14 @@ export class Interpreter {
         this.stack.push({ type: 'ARRAY', items });
         return;
       }
+      case 'OBJECT': {
+        const obj: Record<string, any> = {};
+        for (const property of reverse(ins[1])) {
+          obj[property] = this.stack.pop();
+        }
+        this.stack.push(obj as any);
+        return;
+      }
       case 'ITERATE': {
         const array = this.stack.pop() as ArrayValue;
         const f = this.stack.pop() as FunctionValue;

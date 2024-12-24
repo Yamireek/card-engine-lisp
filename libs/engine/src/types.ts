@@ -62,6 +62,7 @@ export type Instruction =
   | ['LOAD', string]
   | ['SAVE', string]
   | ['ARRAY', number]
+  | ['OBJECT', string[]]
   | ['ITERATE', string]; // 2 args, array + function
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
