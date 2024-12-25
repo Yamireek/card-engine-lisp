@@ -3,6 +3,10 @@ import { StateContext } from '../game/StateContext';
 import { Card3d } from './Card3d';
 import { CardId } from '@card-engine-lisp/engine';
 import { Dimensions, Vector3 } from './types';
+import { getCardImageUrl } from './utils';
+import { Token3d } from './Token3d';
+import * as image from './../images';
+import { useTextures } from './../images/textures';
 
 export const LotrCard3d = (props: {
   cardId: CardId;
@@ -10,17 +14,17 @@ export const LotrCard3d = (props: {
   size: Dimensions;
 }) => {
   const { game } = useContext(StateContext);
-  //const { texture } = useTextures();
-  // const { floatingCards: cards } = useFloatingCards();
+  const { texture } = useTextures();
 
+  // const { floatingCards: cards } = useFloatingCards();
   //const cardActions = actions.filter((a) => a.card === props.cardId);
 
   const card = game.card[props.cardId];
 
-  // const textures = {
-  //   front: texture[getCardImageUrl(card.definition.front, 'front')],
-  //   back: texture[getCardImageUrl(card.definition.back, 'back')],
-  // };
+  const textures = {
+    front: texture[getCardImageUrl(card.definition.front, 'front')],
+    back: texture[getCardImageUrl(card.definition.back, 'back')],
+  };
 
   const orientation = card.definition.orientation;
 
@@ -38,11 +42,11 @@ export const LotrCard3d = (props: {
         0,
         0, //card.tapped ? -Math.PI / 4 : card.shadowOf ? Math.PI / 3 : 0,
       ]}
-      // texture={
-      //   card.sideUp === 'front' || card.sideUp === 'shadow'
-      //     ? textures
-      //     : { front: textures.back, back: textures.front }
-      // }
+      texture={
+        card.sideUp === 'front' || card.sideUp === 'shadow'
+          ? textures
+          : { front: textures.back, back: textures.front }
+      }
       orientation={orientation}
       //hidden={cards.some((c) => c.id === props.cardId)}
       onClick={() => {
@@ -62,10 +66,10 @@ export const LotrCard3d = (props: {
         // }
       }}
     >
-      {/* <Token3d
+      <Token3d
         position={[0.022, 0.01]}
         texture={texture[image.resource]}
-        amount={card.token.resources}
+        amount={card.token.resource}
       />
       <Token3d
         position={[0, 0.01]}
@@ -76,7 +80,7 @@ export const LotrCard3d = (props: {
         position={orientation === 'portrait' ? [0.01, 0.03] : [0.03, 0.01]}
         texture={texture[image.progress]}
         amount={card.token.progress}
-      /> */}
+      />
       {/* {cardActions.length > 0 && state.choice?.type === 'actions' && (
         <mesh>
           <planeGeometry

@@ -9,11 +9,11 @@ import { PlayerZoneType } from '../state';
 export class Player extends Entity<'player'> {
   public override id: PlayerId;
   public zone: Record<PlayerZoneType, Zone> = {
-    library: new Zone(this.game, this.game.nextId++),
-    hand: new Zone(this.game, this.game.nextId++),
-    discardPile: new Zone(this.game, this.game.nextId++),
-    playerArea: new Zone(this.game, this.game.nextId++),
-    engaged: new Zone(this.game, this.game.nextId++),
+    library: new Zone(this.game, this.game.nextId++, 'library'),
+    hand: new Zone(this.game, this.game.nextId++, 'hand'),
+    discardPile: new Zone(this.game, this.game.nextId++, 'discardPile'),
+    playerArea: new Zone(this.game, this.game.nextId++, 'playerArea'),
+    engaged: new Zone(this.game, this.game.nextId++, 'engaged'),
   };
 
   static fromJson(game: Game, state: PlayerState) {

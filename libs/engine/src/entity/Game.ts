@@ -23,14 +23,14 @@ export class Game extends Entity<'game'> {
   public card: Record<CardId, Card> = {};
   public player: Record<PlayerId, Player> = {} as any;
   public zone: Record<GameZoneType, Zone> = {
-    questDeck: new Zone(this, this.nextId++),
-    encounterDeck: new Zone(this, this.nextId++),
-    stagingArea: new Zone(this, this.nextId++),
-    questArea: new Zone(this, this.nextId++),
-    activeLocation: new Zone(this, this.nextId++),
-    discardPile: new Zone(this, this.nextId++),
-    victoryDisplay: new Zone(this, this.nextId++),
-    removed: new Zone(this, this.nextId++),
+    questDeck: new Zone(this, this.nextId++, 'questDeck'),
+    encounterDeck: new Zone(this, this.nextId++, 'encounterDeck'),
+    stagingArea: new Zone(this, this.nextId++, 'stagingArea'),
+    questArea: new Zone(this, this.nextId++, 'questArea'),
+    activeLocation: new Zone(this, this.nextId++, 'activeLocation'),
+    discardPile: new Zone(this, this.nextId++, 'discardPile'),
+    victoryDisplay: new Zone(this, this.nextId++, 'victoryDisplay'),
+    removed: new Zone(this, this.nextId++, 'removed'),
   };
 
   static fromJson(state: GameState, agent: Agent) {
@@ -89,6 +89,7 @@ export class Game extends Entity<'game'> {
     for (const definition of deck.library) {
       const card = new Card(this, this.nextId++, definition);
       player.zone.library.cards.push(card.id);
+      card.sideUp = 'back';
       this.card[card.id] = card;
     }
   }
@@ -108,6 +109,7 @@ export class Game extends Entity<'game'> {
     for (const definition of cards) {
       const card = new Card(this, this.nextId++, definition);
       this.zone.encounterDeck.cards.push(card.id);
+      card.sideUp = 'back';
       this.card[card.id] = card;
     }
   }

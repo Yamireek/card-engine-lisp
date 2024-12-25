@@ -1,14 +1,32 @@
 import { Deck3d } from './Deck3d';
-import { Zone } from '@card-engine-lisp/engine';
+import { Game, Zone } from '@card-engine-lisp/engine';
 import { Vector3 } from './types';
+import { last } from 'ramda';
+import { getCardImageUrl } from './utils';
+import * as image from './../images';
+import { useGameState } from './StateContext';
+import { useTextures } from './../images/textures';
+
+function getDeckImage(game: Game, zone: Zone): string {
+  const topCardId = last(zone.cards);
+  if (!topCardId) {
+    return zone.type === 'encounterDeck'
+      ? image.encounterBack
+      : image.playerBack;
+  }
+
+  const card = game.card[topCardId];
+
+  const side = card.sideUp === 'shadow' ? 'front' : card.sideUp;
+
+  return getCardImageUrl(card.definition[side], side);
+}
 
 export type LotrDeck3dProps = { zone: Zone; position: Vector3 };
 
 export const LotrDeck3d = (props: LotrDeck3dProps) => {
-  // const { state } = useGameState();
-  //const { texture } = useTextures();
-
-  //const zone = getZoneState(props.zone, state);
+  const { game } = useGameState();
+  const { texture } = useTextures();
 
   return (
     <Deck3d
@@ -16,7 +34,7 @@ export const LotrDeck3d = (props: LotrDeck3dProps) => {
       title={props.zone.id.toString()}
       position={props.position}
       cardCount={props.zone.cards.length}
-      //texture={texture[getDeckImage(props.zone, zone, state)]}
+      texture={texture[getDeckImage(game, props.zone)]}
     />
   );
 };

@@ -1,6 +1,6 @@
 import { Text } from '@react-three/drei';
 import { Texture } from 'three';
-import { Vector2 } from '@card-engine-nx/ui';
+import { Vector2 } from './types';
 
 const tokenHeight = 0.002;
 

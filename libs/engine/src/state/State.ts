@@ -1,6 +1,6 @@
 import { CardId, PlayerId, Tokens, ZoneId } from '../entity/types';
 import { Env, Instruction, Value } from '../types';
-import { GameZoneType, PlayerZoneType } from './enums';
+import { GameZoneType, PlayerZoneType, Side, ZoneType } from './enums';
 import { CardDefinition } from './GameSetupData';
 
 export type State = {
@@ -13,6 +13,7 @@ export type State = {
 export type CardState = {
   id: CardId;
   definition: CardDefinition;
+  sideUp: Side;
   tokens: Tokens;
 };
 
@@ -23,6 +24,7 @@ export type PlayerState = {
 
 export type ZoneState = {
   id: ZoneId;
+  type: ZoneType;
   cards: CardId[];
 };
 

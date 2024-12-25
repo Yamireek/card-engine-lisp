@@ -18,7 +18,7 @@ export type Card3dProps = React.PropsWithChildren<{
   name: string;
   position: Vector3;
   rotation?: Vector3;
-  texture?: CardTexture;
+  texture: CardTexture;
   size?: Dimensions;
   hidden?: boolean;
   orientation?: Orientation;
@@ -78,7 +78,7 @@ export const Card3d = (props: Card3dProps) => {
               map={
                 props.texture instanceof Texture
                   ? props.texture
-                  : props.texture?.front
+                  : props.texture.front
               }
             />
             <meshPhysicalMaterial
@@ -86,7 +86,7 @@ export const Card3d = (props: Card3dProps) => {
               map={
                 props.texture instanceof Texture
                   ? props.texture
-                  : props.texture?.back
+                  : props.texture.back
               }
             />
           </>
