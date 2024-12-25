@@ -1,4 +1,4 @@
-import { Value, valueToString } from '@card-engine-liesp/engine';
+import { Value, valueToString } from '@card-engine-lisp/engine';
 import { Chip, Avatar, Button } from '@mui/material';
 
 export const ValueView = (props: { v: Value }) => {

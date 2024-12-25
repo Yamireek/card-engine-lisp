@@ -31,5 +31,6 @@ export class Game extends Entity<'game'> {
 
   start(data: ScenarioSetupData) {
     // todo
+    this.agent.chooseNumber(1, 5);
   }
 }

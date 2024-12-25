@@ -2,9 +2,10 @@ import { Debug } from 'boardgame.io/debug';
 import { Local, SocketIO } from 'boardgame.io/multiplayer';
 import { Client } from 'boardgame.io/react';
 import { LotrLCGBoard } from './LotrLCGBoard';
-import { SetupParams } from './../game/types';
+import { NewGameParams, SetupParams } from './../game/types';
 import { LoadingDialog } from './../dialogs/LoadingDialog';
-import { LotrLCGame, State, toInstructions } from '@card-engine-liesp/engine';
+import { LotrLCGame, State, toInstructions } from '@card-engine-lisp/engine';
+import { core, decks } from '@card-engine-lisp/cards';
 
 export function LotrLCGClient(setup: SetupParams) {
   if (setup.type === 'load') {
@@ -52,30 +53,26 @@ export function LotrLCGClient(setup: SetupParams) {
   throw new Error('not implemented');
 }
 
-export function createNewGameState(setup: SetupParams): State {
+export function createNewGameState(setup: NewGameParams): State {
+  const params = {
+    players: setup.players
+      .filter((p, i) => i < Number(setup.playerCount))
+      .map((key) => (decks as any)[key]),
+    scenario: (core.scenario as any)[setup.scenario],
+    difficulty: setup.difficulty,
+    extra: setup.extra,
+  };
+
+  const code = `game.start(${JSON.stringify(params)})`;
+
   const state: State = {
     game: {
       nextId: 1,
-      card: {
-        1: {
-          id: 1,
-          props: {
-            name: 'Enemy',
-            type: 'enemy' as const,
-            att: 1,
-            def: 2,
-          },
-          tokens: {
-            damage: 0,
-            resource: 0,
-            progress: 0,
-          },
-        },
-      },
+      card: {},
     },
     stack: [],
     vars: {},
-    instructions: toInstructions('game.run()'),
+    instructions: toInstructions(code),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 

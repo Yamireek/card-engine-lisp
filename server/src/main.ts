@@ -1,5 +1,5 @@
 // src/server.js
-import { LotrLCGame } from '@card-engine-liesp/engine';
+import { LotrLCGame } from '@card-engine-lisp/engine';
 import { Server, Origins } from 'boardgame.io/server';
 
 const server = Server({

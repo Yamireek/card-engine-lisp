@@ -17,11 +17,8 @@ import {
   useFormContext,
 } from 'react-hook-form-mui';
 import { SetupParams } from './types';
-import { keys } from '@card-engine-liesp/engine';
-
-const decks = { tactics: { name: 'Tactics' } };
-
-const core = { scenario: { Test: { name: 'Test' } } };
+import { keys } from '@card-engine-lisp/engine';
+import { core, decks } from '@card-engine-lisp/cards';
 
 const GameSetupForm = () => {
   const form = useFormContext();

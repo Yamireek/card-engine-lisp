@@ -2,7 +2,7 @@ import {
   InterpretedAgent,
   Interpreter,
   State,
-} from '@card-engine-liesp/engine';
+} from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import * as patch from 'fast-json-patch';
 import ReactJson from 'react-json-view';

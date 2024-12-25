@@ -1,4 +1,4 @@
-import { Instruction, valueToString } from '@card-engine-liesp/engine';
+import { Instruction, valueToString } from '@card-engine-lisp/engine';
 import { Chip, Avatar } from '@mui/material';
 
 export const InstructionView = (props: { i: Instruction }) => {

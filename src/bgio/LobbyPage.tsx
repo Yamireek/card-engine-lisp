@@ -13,7 +13,7 @@ import { SettingsDialog } from '../settings/SettingsDialog';
 import { useSettings } from '../settings/useSettings';
 import { createNewGameState } from './LotrLCGClient';
 import { Matches } from './Matches';
-import { keys } from '@card-engine-liesp/engine';
+import { keys } from '@card-engine-lisp/engine';
 import { SetupParams } from './../game/types';
 import { GameSetupDialog } from './../game/GameSetupDialog';
 import { useDialogs } from './../dialogs/DialogsContext';

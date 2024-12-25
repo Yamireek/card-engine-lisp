@@ -14,7 +14,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@card-engine-liesp/engine": ["libs/engine/src/index.ts"]
+      "@card-engine-lisp/engine": ["libs/engine/src/index.ts"],
+      "@card-engine-lisp/cards": ["libs/cards/src/index.ts"]
     },
     "jsx": "react-jsx",
     "allowJs": false,

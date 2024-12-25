@@ -16,7 +16,7 @@ import {
   Interpreter,
   toCode,
   toInstructions,
-} from '@card-engine-liesp/engine';
+} from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
 import { reverse } from 'lodash/fp';
 import { ValueView } from './ValueView';

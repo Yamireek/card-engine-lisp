@@ -215,6 +215,8 @@ export function toInstructions<F extends Function>(
         p.type === 'Property'
           ? p.key.type === 'Identifier'
             ? { name: p.key.name, value: p.value }
+            : p.key.type === 'Literal'
+            ? { name: p.key.value as string, value: p.value }
             : undefined
           : undefined
       );
