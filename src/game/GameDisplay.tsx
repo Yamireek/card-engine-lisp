@@ -3,10 +3,13 @@ import { StateContext, useGameState } from './StateContext';
 import { LotrLCGInfo } from './LotrLCGInfo';
 import { GameSceneLoader } from './GameScene';
 import { Board3d } from './Board3d';
+import { PlayerAreas } from './PlayerAreas';
+import { GameAreas } from './GameAreas';
 
 export const GameDisplay = () => {
   const { state } = useContext(StateContext);
-  const game = useGameState();
+  const ctx = useGameState();
+
   //   const textureUrls = useMemo(
   //     () => [...staticUrls, ...getAllImageUrls(state)],
   //     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -15,13 +18,13 @@ export const GameDisplay = () => {
 
   useEffect(() => {
     const handleUnload = () => {
-      game.leave();
+      ctx.leave();
     };
     window.addEventListener('unload', handleUnload);
     return () => {
       window.removeEventListener('unload', handleUnload);
     };
-  }, [game]);
+  }, [ctx]);
 
   return (
     // <FloatingCardsProvider>
@@ -33,11 +36,11 @@ export const GameDisplay = () => {
           {/* <FloatingCards /> */}
           <group rotation={[-Math.PI / 2, 0, 0]}>
             <Board3d />
-            {/* {playerIds.map((id) => (
-                  <PlayerAreas key={id} player={id} />
-                ))} */}
+            {ctx.game.players.map((p) => (
+              <PlayerAreas key={p.id} player={p} />
+            ))}
 
-            {/* <GameAreas playerCount={Object.keys(state.players).length} /> */}
+            <GameAreas playerCount={ctx.game.players.length} />
           </group>
         </GameSceneLoader>
         {/* </TexturesProvider> */}
