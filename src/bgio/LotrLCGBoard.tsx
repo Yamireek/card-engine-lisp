@@ -9,52 +9,10 @@ import { validPlayerId } from './validPlayerId';
 import { StateContext } from './../game/StateContext';
 import { DetailProvider } from './../game/DetailContext';
 import { GameDisplay } from './../game/GameDisplay';
+import patch from 'fast-json-patch';
+import { InterpreterDialogs } from './../interpreter/InterpreterDialogs';
 
 export type LotrLCGProps = BoardProps<State>;
-
-// export const LotrLCGBoard = (props: LotrLCGProps) => {
-//   const interpreter = useMemo(
-//     () => Interpreter.fromJson(props.G, new InterpretedAgent()),
-//     [props.G]
-//   );
-
-//   return (
-//     <>
-//       <button
-//         onClick={() => {
-//           console.time();
-//           interpreter.run();
-//           const newState = interpreter.toJson();
-//           const changes = patch.compare(props.G, newState);
-//           console.log('changes', changes);
-//           props.moves.patch(changes);
-//           console.timeEnd();
-//         }}
-//       >
-//         run
-//       </button>
-//       <InterpreterDialogs
-//         interpreter={interpreter}
-//         onChoice={(choice) => {
-//           console.time();
-//           interpreter.choose(choice);
-//           interpreter.run();
-//           const newState = interpreter.toJson();
-//           const changes = patch.compare(props.G, newState);
-//           console.log('changes', changes);
-//           props.moves.patch(changes);
-//           console.timeEnd();
-//         }}
-//       />
-//       <ReactJson
-//         src={props.G}
-//         enableClipboard={false}
-//         collapsed={2}
-//         theme="monokai"
-//       />
-//     </>
-//   );
-// };
 
 export const LotrLCGBoard = (props: LotrLCGProps) => {
   const settings = useSettings();
@@ -111,6 +69,32 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
       }}
     >
       <DetailProvider>
+        <button
+          onClick={() => {
+            console.time();
+            interpreter.run();
+            const newState = interpreter.toJson();
+            const changes = patch.compare(props.G, newState);
+            console.log('changes', changes);
+            props.moves.patch(changes);
+            console.timeEnd();
+          }}
+        >
+          run
+        </button>
+        <InterpreterDialogs
+          interpreter={interpreter}
+          onChoice={(choice) => {
+            console.time();
+            interpreter.choose(choice);
+            interpreter.run();
+            const newState = interpreter.toJson();
+            const changes = patch.compare(props.G, newState);
+            console.log('changes', changes);
+            props.moves.patch(changes);
+            console.timeEnd();
+          }}
+        />
         <GameDisplay />
       </DetailProvider>
     </StateContext.Provider>

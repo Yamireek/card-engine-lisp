@@ -31,7 +31,7 @@ export const LotrDeck3d = (props: LotrDeck3dProps) => {
   return (
     <Deck3d
       name={`deck-${props.zone.id}`}
-      title={props.zone.id.toString()}
+      title={props.zone.type}
       position={props.position}
       cardCount={props.zone.cards.length}
       texture={texture[getDeckImage(game, props.zone)]}

@@ -116,8 +116,10 @@ export class Game extends Entity<'game'> {
 
   start() {
     // todo
-    this.agent.chooseNumber(1, 5);
+    const a = this.agent.chooseNumber(1, 5);
 
-    this.cards.forEach((card) => card.dealDamage(1));
+    this.cards
+      .filter((c) => c.definition.front.type === 'hero')
+      .forEach((card) => card.dealDamage(a));
   }
 }
