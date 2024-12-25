@@ -10,7 +10,15 @@ import { Card } from './Card';
 import { keys, values } from '../utils';
 
 export class Game extends Entity<'game'> {
-  public nextId = 1;
+  public _nextId = 1;
+
+  get nextId() {
+    return this._nextId;
+  }
+
+  set nextId(value) {
+    this._nextId = value;
+  }
 
   public card: Record<CardId, Card> = {};
   public player: Record<PlayerId, Player> = {} as any;
@@ -27,7 +35,6 @@ export class Game extends Entity<'game'> {
 
   static fromJson(state: GameState, agent: Agent) {
     const game = new Game(agent);
-    game.nextId = state.nextId;
     for (const key of keys(state.card)) {
       const card = state.card[key];
       game.card[key] = Card.fromJson(game, card);
@@ -42,6 +49,8 @@ export class Game extends Entity<'game'> {
       const card = state.zone[key];
       game.zone[key] = Zone.fromJson(game, card);
     }
+
+    game.nextId = state.nextId;
 
     return game;
   }

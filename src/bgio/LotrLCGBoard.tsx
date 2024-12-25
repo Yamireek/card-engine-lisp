@@ -4,7 +4,6 @@ import * as patch from 'fast-json-patch';
 import ReactJson from 'react-json-view';
 import { InterpreterDialogs } from './../interpreter/InterpreterDialogs';
 import { useMemo } from 'react';
-import { debug } from 'console';
 
 export type LotrLCGProps = BoardProps<State>;
 
@@ -20,7 +19,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
         onClick={() => {
           console.time();
           interpreter.run();
-          const newState = interpreter.toJson();          
+          const newState = interpreter.toJson();
           const changes = patch.compare(props.G, newState);
           console.log('changes', changes);
           props.moves.patch(changes);
@@ -32,11 +31,14 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
       <InterpreterDialogs
         interpreter={interpreter}
         onChoice={(choice) => {
+          console.time();
           interpreter.choose(choice);
           interpreter.run();
           const newState = interpreter.toJson();
           const changes = patch.compare(props.G, newState);
+          console.log('changes', changes);
           props.moves.patch(changes);
+          console.timeEnd();
         }}
       />
       <ReactJson
