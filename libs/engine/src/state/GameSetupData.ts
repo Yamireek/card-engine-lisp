@@ -1,7 +1,6 @@
 import { Difficulty, Orientation } from './enums';
+import { PrintedProps } from './PrintedProps';
 import { State } from './State';
-
-export type PrintedProps = { name: string };
 
 export type CardDefinition = {
   front: PrintedProps;

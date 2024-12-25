@@ -1,13 +1,10 @@
-import {
-  InterpretedAgent,
-  Interpreter,
-  State,
-} from '@card-engine-lisp/engine';
+import { InterpretedAgent, Interpreter, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import * as patch from 'fast-json-patch';
 import ReactJson from 'react-json-view';
 import { InterpreterDialogs } from './../interpreter/InterpreterDialogs';
 import { useMemo } from 'react';
+import { debug } from 'console';
 
 export type LotrLCGProps = BoardProps<State>;
 
@@ -21,10 +18,13 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
     <>
       <button
         onClick={() => {
+          console.time();
           interpreter.run();
-          const newState = interpreter.toJson();
+          const newState = interpreter.toJson();          
           const changes = patch.compare(props.G, newState);
+          console.log('changes', changes);
           props.moves.patch(changes);
+          console.timeEnd();
         }}
       >
         run
@@ -39,7 +39,12 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
           props.moves.patch(changes);
         }}
       />
-      <ReactJson src={props.G} enableClipboard={false} />
+      <ReactJson
+        src={props.G}
+        enableClipboard={false}
+        collapsed={2}
+        theme="monokai"
+      />
     </>
   );
 };

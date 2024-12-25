@@ -36,13 +36,7 @@ export class Interpreter {
 
   static fromJson(state: State, agent: Agent) {
     const cloned = clone(state);
-
-    const game = new Game(agent);
-    game.nextId = cloned.game.nextId;
-    for (const key of keys(cloned.game.card)) {
-      const card = cloned.game.card[key];
-      game.card[key] = Card.fromJson(game, card);
-    }
+    const game = Game.fromJson(cloned.game, agent);
     const interpreter = new Interpreter(cloned.instructions, game, false);
     interpreter.stack = cloned.stack;
     interpreter.vars = cloned.vars;
@@ -51,10 +45,7 @@ export class Interpreter {
 
   toJson(): State {
     return {
-      game: {
-        nextId: this.game.nextId,
-        card: mapValues(this.game.card, (card) => card.toJson()),
-      },
+      game: this.game.toJson(),
       stack: this.stack,
       vars: this.vars,
       instructions: this.instructions,

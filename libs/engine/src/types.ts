@@ -24,7 +24,7 @@ export type ArrayValue = {
 export type ReferenceValue = {
   type: 'REFERENCE';
   entity: string;
-  id: number;
+  id: number | string;
 };
 
 export type ChoiceValue = {

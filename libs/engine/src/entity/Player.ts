@@ -1,0 +1,36 @@
+import { Entity } from './Entity';
+import { PlayerId } from './types';
+import { Game } from './Game';
+import { PlayerState } from '../state/State';
+import { mapValues } from 'lodash';
+import { Zone } from './Zone';
+import { PlayerZoneType } from '../state';
+
+export class Player extends Entity<'player'> {
+  public override id: PlayerId;
+  public zone: Record<PlayerZoneType, Zone> = {
+    library: new Zone(this.game, this.game.nextId++),
+    hand: new Zone(this.game, this.game.nextId++),
+    discardPile: new Zone(this.game, this.game.nextId++),
+    playerArea: new Zone(this.game, this.game.nextId++),
+    engaged: new Zone(this.game, this.game.nextId++),
+  };
+
+  static fromJson(game: Game, state: PlayerState) {
+    const player = new Player(game, state.id);
+    player.zone = mapValues(state.zone, (zone) => Zone.fromJson(game, zone));
+    return player;
+  }
+
+  toJson(): PlayerState {
+    return {
+      id: this.id,
+      zone: mapValues(this.zone, (zone) => zone.toJson()),
+    };
+  }
+
+  constructor(public game: Game, id: PlayerId) {
+    super(id, 'player');
+    this.id = id;
+  }
+}

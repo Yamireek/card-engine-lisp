@@ -96,3 +96,11 @@ export type Difficulty = 'easy' | 'normal';
 export type LimitType = 'round' | 'phase';
 
 export type Until = 'end_of_phase' | 'end_of_round';
+
+export type Keywords = {
+  ranged?: boolean;
+  sentinel?: boolean;
+  surge?: boolean;
+};
+
+export type Keyword = keyof Keywords;
