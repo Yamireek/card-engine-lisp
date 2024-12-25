@@ -72,6 +72,10 @@ export class Game extends Entity<'game'> {
     return values(this.card);
   }
 
+  get players() {
+    return values(this.player);
+  }
+
   addPlayer(deck: PlayerDeck) {
     const id = Object.keys(this.player).length.toString() as PlayerId;
     const player = new Player(this, id);
