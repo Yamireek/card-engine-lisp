@@ -1,5 +1,3 @@
-export type PlayerId = '0' | '1' | '2' | '3';
-
 export type Phase =
   | 'setup'
   | 'resource'
@@ -9,8 +7,6 @@ export type Phase =
   | 'encounter'
   | 'combat'
   | 'refresh';
-
-export type Token = 'damage' | 'progress' | 'resources';
 
 export type CardType =
   | 'hero'

@@ -2,18 +2,10 @@ import { Debug } from 'boardgame.io/debug';
 import { Local, SocketIO } from 'boardgame.io/multiplayer';
 import { Client } from 'boardgame.io/react';
 import { LotrLCGBoard } from './LotrLCGBoard';
-import { NewGameParams, SetupParams } from './../game/types';
+import { SetupParams } from './../game/types';
 import { LoadingDialog } from './../dialogs/LoadingDialog';
-import {
-  Game,
-  LotrLCGame,
-  PlayerDeck,
-  Scenario,
-  State,
-  StaticAgent,
-  toInstructions,
-} from '@card-engine-lisp/engine';
-import { core, decks } from '@card-engine-lisp/cards';
+import { LotrLCGame } from '@card-engine-lisp/engine';
+import { createNewGameState } from './createNewGameState';
 
 export function LotrLCGClient(setup: SetupParams) {
   if (setup.type === 'load') {
@@ -59,29 +51,4 @@ export function LotrLCGClient(setup: SetupParams) {
   }
 
   throw new Error('not implemented');
-}
-
-export function createNewGameState(setup: NewGameParams): State {
-  const game = new Game(new StaticAgent([]));
-
-  const players = setup.players
-    .filter((p, i) => i < Number(setup.playerCount))
-    .map((key) => (decks as any)[key]) as PlayerDeck[];
-
-  const scenario = (core.scenario as any)[setup.scenario] as Scenario;
-
-  for (const player of players) {
-    game.addPlayer(player);
-  }
-
-  game.setupScenario(scenario, setup.difficulty);
-
-  const state: State = {
-    game: game.toJson(),
-    stack: [],
-    vars: {},
-    instructions: toInstructions(`game.start()`),
-  };
-
-  return state;
 }

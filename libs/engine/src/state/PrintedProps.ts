@@ -1,4 +1,4 @@
-import { CardType, Keywords, Mark, Sphere, Token, Trait } from './enums';
+import { CardType, Keywords, Mark, Sphere, Trait } from './enums';
 
 export type PrintedProps = {
   type: CardType;
@@ -106,8 +106,6 @@ export type TreacheryProps = {
 export type BackSideProps = {
   type: 'back';
 };
-
-export type Tokens = Record<Token, number>;
 
 export type Marks = Record<Mark, boolean>;
 
