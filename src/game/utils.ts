@@ -33,3 +33,7 @@ export function getCardImageUrls(card: CardDefinition): CardImageUrls {
     back: getCardImageUrl(card.back, 'back'),
   };
 }
+
+export function capitalizeFirst(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
