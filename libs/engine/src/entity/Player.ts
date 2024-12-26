@@ -33,4 +33,8 @@ export class Player extends Entity<'player'> {
     super(id, 'player');
     this.id = id;
   }
+
+  draw(amount: number) {
+    // TODO
+  }
 }

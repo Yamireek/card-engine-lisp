@@ -3,6 +3,7 @@ import { Tokens, CardId } from './types';
 import { Game } from './Game';
 import { CardState } from '../state/State';
 import { CardDefinition, Side } from '../state';
+import { Zone } from './Zone';
 
 export class Card extends Entity<'card'> {
   public override id: number;
@@ -32,7 +33,15 @@ export class Card extends Entity<'card'> {
     this.definition = definition;
   }
 
+  generateResources(amount: number) {
+    this.token.resource += amount;
+  }
+
   dealDamage(amount: number) {
-    this.token.damage = this.token.damage + amount;
+    this.token.damage += amount;
+  }
+
+  move(zone: Zone) {
+    // TODO
   }
 }

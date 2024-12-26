@@ -122,6 +122,8 @@ export function toInstructions<F extends Function>(
     }
     case 'Identifier':
       return [['LOAD', value.name]];
+    case 'ThisExpression':
+      return [['LOAD', 'this']];
     case 'CallExpression': {
       if (value.callee.type === 'MemberExpression') {
         const me = value.callee as MemberExpression;

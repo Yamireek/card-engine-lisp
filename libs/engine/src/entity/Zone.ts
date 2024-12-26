@@ -9,6 +9,10 @@ export class Zone extends Entity<'zone'> {
   public type: ZoneType;
   public cards: CardId[] = [];
 
+  get topCard() {
+    return this.game.card[this.cards[this.cards.length - 1]];
+  }
+
   static fromJson(game: Game, state: ZoneState) {
     const zone = new Zone(game, state.id, state.type);
     zone.cards = state.cards;
@@ -27,5 +31,9 @@ export class Zone extends Entity<'zone'> {
     super(id, 'zone');
     this.id = id;
     this.type = type;
+  }
+
+  shuffle() {
+    // TODO
   }
 }

@@ -115,11 +115,18 @@ export class Game extends Entity<'game'> {
   }
 
   start() {
-    // todo
-    const a = this.agent.chooseNumber(1, 5);
-
+    this.zone.encounterDeck.shuffle();
+    this.players.forEach((p) => p.zone.library.shuffle());
+    this.players.forEach((p) => p.draw(6));
     this.cards
       .filter((c) => c.definition.front.type === 'hero')
-      .forEach((card) => card.dealDamage(a));
+      .forEach((c) => c.generateResources(1));
+    this.zone.questDeck.topCard.move(this.zone.questArea);
+    // TODO setup
+    this.round();
+  }
+
+  round() {
+    // TODO
   }
 }
