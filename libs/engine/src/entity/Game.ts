@@ -101,7 +101,7 @@ export class Game extends Entity<'game'> {
       .filter((c) => c.definition.front.type === 'hero')
       .forEach((c) => c.generateResources(1));
     this.zones.questDeck.topCard.move(this.zones.questArea);
-    // TODO setup
+    // // // TODO setup
     this.round();
   }
 

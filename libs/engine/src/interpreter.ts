@@ -8,7 +8,7 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { fromValue, repeat, toJSFunction, toValue } from './utils';
+import { fromValue, remove, repeat, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
 import { clone, last, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
@@ -138,14 +138,16 @@ export class Interpreter {
             const a = this.stack.pop();
             repeat(a, () => {
               this.stack.push(f);
-            });
-            repeat(a - 1, () => {
               this.instructions.unshift('CALL');
             });
+            this.instructions.shift();
             return;
           }
           case 'remove': {
-            throw new Error('not implemented');
+            const item = this.stack.pop();
+            const array = this.stack.pop();
+            remove(array, item);
+            this.instructions.shift();
             return;
           }
           default: {
@@ -228,12 +230,12 @@ export class Interpreter {
           const lambda = this.stack.pop() as any;
           const predicate = toJSFunction(lambda) as any;
           const result = entity.filter(predicate);
-          this.stack.push(toValue(result));
+          this.stack.push(result);
           return;
         }
         case 'forEach': {
           const lambda = this.stack.pop() as any;
-          this.stack.push(...entity.flatMap((e) => [toValue(e), lambda]));
+          this.stack.push(...entity.flatMap((e) => [e, lambda]));
           this.instructions.unshift(...entity.map(() => 'CALL' as const));
           return;
         }
@@ -272,8 +274,11 @@ export class Interpreter {
 
   setValue(path: string, value: any) {
     const parts = path.split('.');
+
     const frame =
-      reverse(this.frames).find((f) => parts[0] in f) ?? last(this.frames);
+      parts.length > 1
+        ? reverse(this.frames).find((f) => parts[0] in f) ?? last(this.frames)
+        : last(this.frames);
 
     if (frame) {
       set(frame, path, value);
