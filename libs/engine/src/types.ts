@@ -46,7 +46,16 @@ export type Value =
   | ReferenceValue
   | ChoiceValue;
 
-export type BinaryOperator = '+' | '*' | '/' | '-' | '==' | '===' | '<=' | '<';
+export type BinaryOperator =
+  | '+'
+  | '*'
+  | '/'
+  | '-'
+  | '=='
+  | '==='
+  | '!=='
+  | '<='
+  | '<';
 
 export type AssignmentOperator = '=';
 

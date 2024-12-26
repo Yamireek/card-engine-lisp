@@ -24,6 +24,7 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
   '*': (a, b) => a * b,
   '/': (a, b) => a / b,
   '===': (a, b) => a === b,
+  '!==': (a, b) => a !== b,
   '==': (a, b) => a == b,
   '<=': (a, b) => a <= b,
   '<': (a, b) => a < b,
@@ -93,7 +94,7 @@ export class Interpreter {
           for (const arg of reverse(func.parameters)) {
             const value = this.stack.pop();
             if (value) {
-              this.setValue(arg, value);
+              this.setValue(arg, value, this.game);
             }
           }
           this.instructions.unshift(...func.body);
@@ -132,26 +133,33 @@ export class Interpreter {
       }
       case 'LOAD': {
         const path = ins[1];
-        if (path === 'repeat') {
-          const f = this.stack.pop() as FunctionValue;
-          const a = this.stack.pop() as number;
-          repeat(a, () => {
-            this.stack.push(f);
-          });
-          repeat(a - 1, () => {
-            this.instructions.unshift('CALL');
-          });
-          return;
-        } else {
-          const value = this.getValue(path);
-          this.stack.push(toValue(value));
-          return;
+        switch (path) {
+          case 'repeat': {
+            const f = this.stack.pop() as FunctionValue;
+            const a = this.stack.pop() as number;
+            repeat(a, () => {
+              this.stack.push(f);
+            });
+            repeat(a - 1, () => {
+              this.instructions.unshift('CALL');
+            });
+            return;
+          }
+          case 'remove': {
+            throw new Error('not implemented');
+            return;
+          }
+          default: {
+            const value = this.getValue(path);
+            this.stack.push(toValue(value));
+            return;
+          }
         }
       }
       case 'SAVE': {
         const path = ins[1];
         const value = this.stack.pop();
-        this.setValue(path, value);
+        this.setValue(path, value, this.game);
         return;
       }
       case 'ARRAY': {
@@ -216,25 +224,32 @@ export class Interpreter {
     }
 
     if (isArray(entity)) {
-      const lambda = this.stack.pop() as any;
-
       switch (property) {
         case 'filter': {
+          const lambda = this.stack.pop() as any;
           const predicate = toJSFunction(lambda) as any;
           const result = entity.filter(predicate);
           this.stack.push(toValue(result));
           return;
         }
         case 'forEach': {
+          const lambda = this.stack.pop() as any;
           this.stack.push(...entity.flatMap((e) => [toValue(e), lambda]));
           this.instructions.unshift(...entity.map(() => 'CALL' as const));
           return;
         }
+        case 'push': {
+          const item = this.stack.pop() as any;
+          entity.push(item);
+          return;
+        }
+        default:
+          throw new Error('not implemented: ' + property);
       }
     } else {
       const method = entity[property];
       const func = toValue(method);
-      this.setValue('this', entity);
+      this.setValue('this', entity, this.game);
       this.stack.push(func);
       this.instructions.unshift('CALL');
       return;
@@ -253,13 +268,17 @@ export class Interpreter {
     }
 
     const parts = path.split('.');
-    let frame = reverse(this.frames).find((f) => parts[0] in f) as Env;
+    let frame = reverse(this.frames).find((f) => parts[0] in f);
 
     if (!frame) {
       return undefined;
     }
 
     for (const part of parts) {
+      if (!frame) {
+        return undefined;
+      }
+
       if (part in frame) {
         frame = fromValue(frame[part], this.game);
       } else {
@@ -270,10 +289,10 @@ export class Interpreter {
     return frame;
   }
 
-  setValue(path: string, value: any) {
+  setValue(path: string, value: any, game: Game) {
     const parts = path.split('.');
     const property = parts.splice(parts.length - 1)[0];
-    let result = reverse(this.frames).find((f) => parts[0] in f) as Env;
+    let result = reverse(this.frames).find((f) => parts[0] in f);
 
     if (!result) {
       const frame = last(this.frames);
@@ -286,12 +305,18 @@ export class Interpreter {
     }
 
     for (const part of parts) {
+      if (!result) {
+        return;
+      }
+
       if (part in result) {
         result = fromValue(result[part], this.game);
       }
     }
 
-    result[property] = toValue(value);
+    if (result) {
+      result[property] = fromValue(value, game);
+    }
   }
 
   step(): boolean {

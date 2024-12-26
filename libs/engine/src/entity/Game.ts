@@ -1,4 +1,4 @@
-import { CardId, PlayerId } from './types';
+import { CardId, PlayerId, ZoneId } from './types';
 import { Entity } from './Entity';
 import { Agent } from '../agent/Agent';
 import { PlayerDeck, Scenario } from '../state/GameSetupData';
@@ -10,19 +10,11 @@ import { Card } from './Card';
 import { keys, values } from '../utils';
 
 export class Game extends Entity<'game'> {
-  public _nextId = 1;
-
-  get nextId() {
-    return this._nextId;
-  }
-
-  set nextId(value) {
-    this._nextId = value;
-  }
-
+  public nextId = 1;
   public card: Record<CardId, Card> = {};
   public player: Record<PlayerId, Player> = {} as any;
-  public zone: Record<GameZoneType, Zone> = {
+  public zone: Record<ZoneId, Zone> = {};
+  public zones: Record<GameZoneType, Zone> = {
     questDeck: new Zone(this, this.nextId++, 'questDeck'),
     encounterDeck: new Zone(this, this.nextId++, 'encounterDeck'),
     stagingArea: new Zone(this, this.nextId++, 'stagingArea'),
@@ -43,7 +35,7 @@ export class Game extends Entity<'game'> {
 
     for (const key of keys(state.zone)) {
       const card = state.zone[key];
-      game.zone[key] = Zone.fromJson(game, card, state.card);
+      game.zones[key] = Zone.fromJson(game, card, state.card);
     }
 
     game.nextId = state.nextId;
@@ -56,7 +48,7 @@ export class Game extends Entity<'game'> {
       nextId: this.nextId,
       card: mapValues(this.card, (card) => card.toJson()),
       player: mapValues(this.player, (player) => player.toJson()),
-      zone: mapValues(this.zone, (zone) => zone.toJson()),
+      zone: mapValues(this.zones, (zone) => zone.toJson()),
     };
   }
 
@@ -87,7 +79,7 @@ export class Game extends Entity<'game'> {
 
   setupScenario(scenario: Scenario, difficulty: Difficulty) {
     for (const definition of scenario.quest) {
-      this.zone.questDeck.addCard(this, definition);
+      this.zones.questDeck.addCard(this, definition);
     }
 
     const cards =
@@ -96,18 +88,18 @@ export class Game extends Entity<'game'> {
         : scenario.sets.flatMap((e) => [...e.easy, ...e.normal]);
 
     for (const definition of cards) {
-      this.zone.encounterDeck.addCard(this, definition);
+      this.zones.encounterDeck.addCard(this, definition);
     }
   }
 
   start() {
-    this.zone.encounterDeck.shuffle();
+    this.zones.encounterDeck.shuffle();
     this.players.forEach((p) => p.zone.library.shuffle());
     this.players.forEach((p) => p.draw(6));
     this.cards
       .filter((c) => c.definition.front.type === 'hero')
       .forEach((c) => c.generateResources(1));
-    this.zone.questDeck.topCard.move(this.zone.questArea);
+    this.zones.questDeck.topCard.move(this.zones.questArea);
     // TODO setup
     this.round();
   }

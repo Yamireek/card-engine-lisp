@@ -367,7 +367,8 @@ export function toCode(commands: Instruction[], values: Value[] = []): string {
         case '<=':
         case '<':
         case '==':
-        case '===': {
+        case '===':
+        case '!==': {
           const b = stack.pop();
           const a = stack.pop();
           stack.push(`(${a} ${command} ${b})`);
@@ -526,4 +527,9 @@ export function repeat(amount: number, action: () => void) {
   for (let i = 0; i < amount; i++) {
     action();
   }
+}
+
+export function remove<T>(array: T[], item: T) {
+  const index = array.indexOf(item);
+  array.splice(index);
 }

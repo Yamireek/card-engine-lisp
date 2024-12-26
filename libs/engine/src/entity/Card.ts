@@ -4,6 +4,7 @@ import { Game } from './Game';
 import { CardState } from '../state/State';
 import { CardDefinition, Side } from '../state';
 import { Zone } from './Zone';
+import { remove } from '../utils';
 
 export class Card extends Entity<'card'> {
   public override id: number;
@@ -47,6 +48,7 @@ export class Card extends Entity<'card'> {
   }
 
   move(zone: Zone) {
-    // TODO
+    remove(this.zone.cards, this.id);
+    zone.cards.push(this.id);
   }
 }
