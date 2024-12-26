@@ -137,6 +137,12 @@ describe('objects', () => {
     evaluate('obj.a.b = 5 * 5', { obj });
     expect(obj.a.b).toBe(25);
   });
+
+  it('property increment', () => {
+    const env = { b: 1 };
+    evaluate('b += 1', env);
+    expect(env.b).toBe(2);
+  });
 });
 
 describe('forof', () => {

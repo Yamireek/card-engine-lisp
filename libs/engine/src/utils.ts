@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { parse } from 'meriyah';
-import { isArray } from 'lodash';
+import { defer, isArray } from 'lodash';
 import {
   Expression,
   MemberExpression,
@@ -135,7 +135,9 @@ export function toInstructions<F extends Function>(
           const prop = toPath(me.property);
           return [
             ...value.arguments.flatMap(toInstructions),
+            'FRAME_BEGIN',
             ['CALL', obj, prop, value.arguments.length],
+            'FRAME_END',
           ];
         } else {
           const params = value.arguments.flatMap(toInstructions);
@@ -143,7 +145,9 @@ export function toInstructions<F extends Function>(
           return [
             ...params,
             ...calle,
+            'FRAME_BEGIN',
             ['CALL', toPath(me.property), value.arguments.length],
+            'FRAME_END',
           ];
         }
       } else {
@@ -175,7 +179,16 @@ export function toInstructions<F extends Function>(
     case 'AssignmentExpression': {
       const path = toPath(value.left);
       const result = toInstructions(value.right);
-      return [...result, ['SAVE', path]];
+      switch (value.operator) {
+        case '=':
+          return [...result, ['SAVE', path]];
+        case '+=':
+          return [['LOAD', path], ...result, '+', ['SAVE', path]];
+        case '-=':
+          return [['LOAD', path], ...result, '-', ['SAVE', path]];
+        default:
+          throw new Error('unknown operator: ' + value.operator);
+      }
     }
     case 'BinaryExpression': {
       const l = toInstructions(value.left);

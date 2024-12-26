@@ -56,6 +56,8 @@ export type Instruction =
   | '?' // 3 args
   | 'RETURN'
   | 'CALL' // x args
+  | 'FRAME_BEGIN'
+  | 'FRAME_END'
   | ['CALL', string, string, number]
   | ['CALL', string, number]
   | ['PUSH', Value]

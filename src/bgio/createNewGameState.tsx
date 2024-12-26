@@ -27,7 +27,7 @@ export function createNewGameState(setup: NewGameParams): State {
   const state: State = {
     game: game.toJson(),
     stack: [],
-    vars: {},
+    frames: [{}],
     instructions: toInstructions(`game.start()`),
   };
 

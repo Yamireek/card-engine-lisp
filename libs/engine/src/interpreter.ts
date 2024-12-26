@@ -9,7 +9,7 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { fromValue, keys, toJSFunction, toValue } from './utils';
+import { fromValue, keys, repeat, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
 import { clone, last, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
@@ -99,6 +99,12 @@ export class Interpreter {
           this.instructions.unshift(...func.body);
           return;
         }
+        case 'FRAME_BEGIN':
+          this.frames.push({});
+          return;
+        case 'FRAME_END':
+          this.frames.pop();
+          return;
         default:
           return `unknown instruction: ${ins}`;
       }
@@ -126,9 +132,21 @@ export class Interpreter {
       }
       case 'LOAD': {
         const path = ins[1];
-        const value = this.getValue(path);
-        this.stack.push(toValue(value));
-        return;
+        if (path === 'repeat') {
+          const f = this.stack.pop() as FunctionValue;
+          const a = this.stack.pop() as number;
+          repeat(a, () => {
+            this.stack.push(f);
+          });
+          repeat(a - 1, () => {
+            this.instructions.unshift('CALL');
+          });
+          return;
+        } else {
+          const value = this.getValue(path);
+          this.stack.push(toValue(value));
+          return;
+        }
       }
       case 'SAVE': {
         const path = ins[1];
@@ -209,7 +227,7 @@ export class Interpreter {
         }
         case 'forEach': {
           this.stack.push(...entity.flatMap((e) => [toValue(e), lambda]));
-          this.instructions.push(...entity.map(() => 'CALL' as const));
+          this.instructions.unshift(...entity.map(() => 'CALL' as const));
           return;
         }
       }
@@ -218,7 +236,7 @@ export class Interpreter {
       const func = toValue(method);
       this.setValue('this', entity);
       this.stack.push(func);
-      this.instructions.push('CALL');
+      this.instructions.unshift('CALL');
       return;
     }
   }
@@ -235,7 +253,7 @@ export class Interpreter {
     }
 
     const parts = path.split('.');
-    let frame = this.frames.find((f) => parts[0] in f) as Env;
+    let frame = reverse(this.frames).find((f) => parts[0] in f) as Env;
 
     if (!frame) {
       return undefined;
@@ -255,7 +273,7 @@ export class Interpreter {
   setValue(path: string, value: any) {
     const parts = path.split('.');
     const property = parts.splice(parts.length - 1)[0];
-    let result = this.frames.find((f) => parts[0] in f) as Env;
+    let result = reverse(this.frames).find((f) => parts[0] in f) as Env;
 
     if (!result) {
       const frame = last(this.frames);

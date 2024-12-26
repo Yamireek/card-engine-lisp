@@ -5,6 +5,7 @@ import { PlayerState } from '../state/State';
 import { mapValues } from 'lodash';
 import { Zone } from './Zone';
 import { PlayerZoneType } from '../state';
+import { repeat } from '../utils';
 
 export class Player extends Entity<'player'> {
   public override id: PlayerId;
@@ -35,6 +36,6 @@ export class Player extends Entity<'player'> {
   }
 
   draw(amount: number) {
-    // TODO
+    repeat(amount, () => this.zone.library.topCard.move(this.zone.hand));
   }
 }
