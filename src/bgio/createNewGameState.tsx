@@ -14,9 +14,9 @@ export function createNewGameState(setup: NewGameParams): State {
 
   const players = setup.players
     .filter((p, i) => i < Number(setup.playerCount))
-    .map((key) => (decks as any)[key]) as PlayerDeck[];
+    .map((key) => decks[key]) as PlayerDeck[];
 
-  const scenario = (core.scenario as any)[setup.scenario] as Scenario;
+  const scenario = core.scenario[setup.scenario] as Scenario;
 
   for (const player of players) {
     game.addPlayer(player);

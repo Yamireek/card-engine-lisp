@@ -1,4 +1,3 @@
-import { CardType } from '../state';
 import { Flavor } from '../types';
 
 export type CardId = Flavor<number, 'card'>;

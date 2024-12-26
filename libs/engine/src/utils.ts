@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { parse } from 'meriyah';
-import { defer, isArray } from 'lodash';
+import { isArray } from 'lodash';
 import {
   Expression,
   MemberExpression,

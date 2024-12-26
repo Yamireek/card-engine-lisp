@@ -1,4 +1,4 @@
-import { Fragment, useContext } from 'react';
+import { useContext } from 'react';
 import { StateContext } from './StateContext';
 import { GameInfo } from './GameInfo';
 import {
@@ -7,10 +7,7 @@ import {
   IconButton,
   Icon,
   Typography,
-  Tooltip,
-  Divider,
 } from '@mui/material';
-import { values } from '@card-engine-lisp/engine';
 
 export const LotrLCGInfo = () => {
   const { game, state, playerId, undo, redo, leave } = useContext(StateContext);

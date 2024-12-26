@@ -1,5 +1,5 @@
 import { Entity } from './Entity';
-import { Tokens, CardId, ZoneId } from './types';
+import { Tokens, CardId } from './types';
 import { Game } from './Game';
 import { CardState } from '../state/State';
 import { CardDefinition, Side } from '../state';

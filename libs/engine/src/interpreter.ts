@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { get, isArray, mapValues } from 'lodash';
+import { get, isArray, set } from 'lodash';
 import {
-  ArrayValue,
   BinaryOperator,
   Env,
   FunctionValue,
@@ -9,16 +8,16 @@ import {
   InstructionsValue,
   Value,
 } from './types';
-import { fromValue, keys, repeat, toJSFunction, toValue } from './utils';
+import { fromValue, repeat, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
 import { clone, last, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
 import { InterpretedAgent } from './agent/InterpretedAgent';
 import { State } from './state/State';
 import { Agent } from './agent';
-import { Card, Game } from './entity';
+import { Game } from './entity';
 
-const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
+const operations: Record<BinaryOperator, (...args: any[]) => any> = {
   '+': (a, b) => a + b,
   '-': (a, b) => a - b,
   '*': (a, b) => a * b,
@@ -31,7 +30,7 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
 };
 
 export class Interpreter {
-  public stack: Value[] = [];
+  public stack: any[] = [];
 
   public frames: Env[] = [{}];
 
@@ -39,7 +38,7 @@ export class Interpreter {
     const cloned = clone(state);
     const game = Game.fromJson(cloned.game, agent);
     const interpreter = new Interpreter(cloned.instructions, game, false);
-    interpreter.stack = cloned.stack;
+    interpreter.stack = cloned.stack.map((v) => fromValue(v, game));
     interpreter.frames = cloned.frames;
     return interpreter;
   }
@@ -47,7 +46,7 @@ export class Interpreter {
   toJson(): State {
     return {
       game: this.game.toJson(),
-      stack: this.stack,
+      stack: this.stack.map((v) => toValue(v)),
       frames: this.frames,
       instructions: this.instructions,
     };
@@ -94,7 +93,7 @@ export class Interpreter {
           for (const arg of reverse(func.parameters)) {
             const value = this.stack.pop();
             if (value) {
-              this.setValue(arg, value, this.game);
+              this.setValue(arg, value);
             }
           }
           this.instructions.unshift(...func.body);
@@ -113,20 +112,20 @@ export class Interpreter {
 
     switch (ins[0]) {
       case 'PUSH': {
-        const value = ins[1] as Value;
+        const value = ins[1];
         this.stack.push(value);
         return;
       }
       case 'CALL': {
         if (ins.length === 4) {
-          const path = ins[1] as string;
-          const property = ins[2] as string;
+          const path = ins[1];
+          const property = ins[2];
           const entity = this.getValue(path);
           this.call(entity, property);
           return;
         } else {
-          const property = ins[1] as string;
-          const entity = fromValue(this.stack.pop(), this.game) as any[];
+          const property = ins[1];
+          const entity = this.stack.pop();
           this.call(entity, property);
           return;
         }
@@ -135,8 +134,8 @@ export class Interpreter {
         const path = ins[1];
         switch (path) {
           case 'repeat': {
-            const f = this.stack.pop() as FunctionValue;
-            const a = this.stack.pop() as number;
+            const f = this.stack.pop();
+            const a = this.stack.pop();
             repeat(a, () => {
               this.stack.push(f);
             });
@@ -151,7 +150,7 @@ export class Interpreter {
           }
           default: {
             const value = this.getValue(path);
-            this.stack.push(toValue(value));
+            this.stack.push(value);
             return;
           }
         }
@@ -159,7 +158,7 @@ export class Interpreter {
       case 'SAVE': {
         const path = ins[1];
         const value = this.stack.pop();
-        this.setValue(path, value, this.game);
+        this.setValue(path, value);
         return;
       }
       case 'ARRAY': {
@@ -180,9 +179,9 @@ export class Interpreter {
         return;
       }
       case 'ITERATE': {
-        const array = this.stack.pop() as ArrayValue;
-        const f = this.stack.pop() as FunctionValue;
-        for (const item of array.items) {
+        const array = this.stack.pop();
+        const f = this.stack.pop();
+        for (const item of array) {
           this.instructions.unshift(['PUSH', item], ['PUSH', f], 'CALL');
         }
         return;
@@ -205,8 +204,8 @@ export class Interpreter {
       }
     } else if (entity instanceof InterpretedAgent) {
       if (property === 'chooseNumber') {
-        const max = this.stack.pop() as number;
-        const min = this.stack.pop() as number;
+        const max = this.stack.pop();
+        const min = this.stack.pop();
         this.stack.push({
           type: 'CHOICE',
           min: 1,
@@ -249,7 +248,7 @@ export class Interpreter {
     } else {
       const method = entity[property];
       const func = toValue(method);
-      this.setValue('this', entity, this.game);
+      this.setValue('this', entity);
       this.stack.push(func);
       this.instructions.unshift('CALL');
       return;
@@ -261,61 +260,25 @@ export class Interpreter {
       return get(this, path);
     }
 
-    for (const frame of this.frames) {
-      if (path in frame) {
-        return fromValue(frame[path], this.game);
-      }
-    }
-
     const parts = path.split('.');
-    let frame = reverse(this.frames).find((f) => parts[0] in f);
+    const frame = reverse(this.frames).find((f) => parts[0] in f);
 
-    if (!frame) {
+    if (frame) {
+      return get(frame, path);
+    } else {
       return undefined;
     }
-
-    for (const part of parts) {
-      if (!frame) {
-        return undefined;
-      }
-
-      if (part in frame) {
-        frame = fromValue(frame[part], this.game);
-      } else {
-        return undefined;
-      }
-    }
-
-    return frame;
   }
 
-  setValue(path: string, value: any, game: Game) {
+  setValue(path: string, value: any) {
     const parts = path.split('.');
-    const property = parts.splice(parts.length - 1)[0];
-    let result = reverse(this.frames).find((f) => parts[0] in f);
+    const frame =
+      reverse(this.frames).find((f) => parts[0] in f) ?? last(this.frames);
 
-    if (!result) {
-      const frame = last(this.frames);
-      if (frame) {
-        frame[property] = toValue(value);
-        return;
-      } else {
-        throw new Error('no frame');
-      }
-    }
-
-    for (const part of parts) {
-      if (!result) {
-        return;
-      }
-
-      if (part in result) {
-        result = fromValue(result[part], this.game);
-      }
-    }
-
-    if (result) {
-      result[property] = fromValue(value, game);
+    if (frame) {
+      set(frame, path, value);
+    } else {
+      throw new Error('no frame');
     }
   }
 

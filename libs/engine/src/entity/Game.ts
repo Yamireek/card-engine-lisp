@@ -12,6 +12,7 @@ import { keys, values } from '../utils';
 export class Game extends Entity<'game'> {
   public nextId = 1;
   public card: Record<CardId, Card> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public player: Record<PlayerId, Player> = {} as any;
   public zone: Record<ZoneId, Zone> = {};
   public zones: Record<GameZoneType, Zone> = {
