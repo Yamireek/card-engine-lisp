@@ -6,7 +6,7 @@ import { CardDefinition } from './GameSetupData';
 export type State = {
   game: GameState;
   stack: Value[];
-  vars: Env;
+  frames: Env[];
   instructions: Instruction[];
 };
 

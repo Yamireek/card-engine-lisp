@@ -35,9 +35,6 @@ it('interpret method', () => {
 
 it('real agent', () => {
   const game = new TestGame(new InterpretedAgent());
-  game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
-  game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
-  game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
 
   const interpreter = new Interpreter(toInstructions('game.runTest()'), game);
   const result = interpreter.run();

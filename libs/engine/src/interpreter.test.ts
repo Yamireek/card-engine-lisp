@@ -10,7 +10,7 @@ function evaluate(code: string, vars: Env = {}) {
   console.log('instructions', instructions);
   console.log('decompiled', toCode(instructions));
   const interpreter = new Interpreter(instructions);
-  interpreter.vars = vars;
+  interpreter.frames = [vars];
   const interpreted = interpreter.run();
   if (interpreted) {
     return valueToJs(interpreted);
@@ -49,7 +49,7 @@ describe('variables', () => {
   });
 
   it('var declaration', () => {
-    const env = observable({ b: 1 });
+    const env = { b: 1 };
     evaluate('const a = 2 * 3; b = a * 4', env);
     expect(env.b).toBe(24);
   });

@@ -11,7 +11,7 @@ import {
 } from './types';
 import { fromValue, keys, toJSFunction, toValue } from './utils';
 import { makeAutoObservable } from 'mobx';
-import { clone, reverse } from 'ramda';
+import { clone, last, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
 import { InterpretedAgent } from './agent/InterpretedAgent';
 import { State } from './state/State';
@@ -32,14 +32,14 @@ const operations: Record<BinaryOperator, (...args: any[]) => Value> = {
 export class Interpreter {
   public stack: Value[] = [];
 
-  public vars: Env = {};
+  public frames: Env[] = [{}];
 
   static fromJson(state: State, agent: Agent) {
     const cloned = clone(state);
     const game = Game.fromJson(cloned.game, agent);
     const interpreter = new Interpreter(cloned.instructions, game, false);
     interpreter.stack = cloned.stack;
-    interpreter.vars = cloned.vars;
+    interpreter.frames = cloned.frames;
     return interpreter;
   }
 
@@ -47,7 +47,7 @@ export class Interpreter {
     return {
       game: this.game.toJson(),
       stack: this.stack,
-      vars: this.vars,
+      frames: this.frames,
       instructions: this.instructions,
     };
   }
@@ -228,27 +228,45 @@ export class Interpreter {
       return get(this, path);
     }
 
-    if (path in this.vars) {
-      return fromValue(this.vars[path], this.game);
+    for (const frame of this.frames) {
+      if (path in frame) {
+        return fromValue(frame[path], this.game);
+      }
     }
 
-    let result = this.vars;
     const parts = path.split('.');
+    let frame = this.frames.find((f) => parts[0] in f) as Env;
+
+    if (!frame) {
+      return undefined;
+    }
+
     for (const part of parts) {
-      if (part in result) {
-        result = fromValue(result[part], this.game);
+      if (part in frame) {
+        frame = fromValue(frame[part], this.game);
       } else {
         return undefined;
       }
     }
 
-    return result;
+    return frame;
   }
 
   setValue(path: string, value: any) {
-    let result = this.vars;
     const parts = path.split('.');
     const property = parts.splice(parts.length - 1)[0];
+    let result = this.frames.find((f) => parts[0] in f) as Env;
+
+    if (!result) {
+      const frame = last(this.frames);
+      if (frame) {
+        frame[property] = toValue(value);
+        return;
+      } else {
+        throw new Error('no frame');
+      }
+    }
+
     for (const part of parts) {
       if (part in result) {
         result = fromValue(result[part], this.game);
