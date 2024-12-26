@@ -35,19 +35,15 @@ export class Game extends Entity<'game'> {
 
   static fromJson(state: GameState, agent: Agent) {
     const game = new Game(agent);
-    for (const key of keys(state.card)) {
-      const card = state.card[key];
-      game.card[key] = Card.fromJson(game, card);
-    }
 
     for (const key of keys(state.player)) {
       const card = state.player[key];
-      game.player[key] = Player.fromJson(game, card);
+      game.player[key] = Player.fromJson(game, card, state.card);
     }
 
     for (const key of keys(state.zone)) {
       const card = state.zone[key];
-      game.zone[key] = Zone.fromJson(game, card);
+      game.zone[key] = Zone.fromJson(game, card, state.card);
     }
 
     game.nextId = state.nextId;
@@ -81,24 +77,17 @@ export class Game extends Entity<'game'> {
     const player = new Player(this, id);
     this.player[id] = player;
     for (const hero of deck.heroes) {
-      const card = new Card(this, this.nextId++, hero);
-      player.zone.playerArea.cards.push(card.id);
-      this.card[card.id] = card;
+      player.zone.playerArea.addCard(this, hero);
     }
 
     for (const definition of deck.library) {
-      const card = new Card(this, this.nextId++, definition);
-      player.zone.library.cards.push(card.id);
-      card.sideUp = 'back';
-      this.card[card.id] = card;
+      player.zone.library.addCard(this, definition);
     }
   }
 
   setupScenario(scenario: Scenario, difficulty: Difficulty) {
     for (const definition of scenario.quest) {
-      const card = new Card(this, this.nextId++, definition);
-      this.zone.questDeck.cards.push(card.id);
-      this.card[card.id] = card;
+      this.zone.questDeck.addCard(this, definition);
     }
 
     const cards =
@@ -107,10 +96,7 @@ export class Game extends Entity<'game'> {
         : scenario.sets.flatMap((e) => [...e.easy, ...e.normal]);
 
     for (const definition of cards) {
-      const card = new Card(this, this.nextId++, definition);
-      this.zone.encounterDeck.cards.push(card.id);
-      card.sideUp = 'back';
-      this.card[card.id] = card;
+      this.zone.encounterDeck.addCard(this, definition);
     }
   }
 

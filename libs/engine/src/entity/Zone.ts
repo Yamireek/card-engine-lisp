@@ -2,7 +2,8 @@ import { Entity } from './Entity';
 import { CardId, ZoneId } from './types';
 import { Game } from './Game';
 import { ZoneState } from '../state/State';
-import { ZoneType } from '../state';
+import { CardDefinition, CardState, ZoneType } from '../state';
+import { Card } from './Card';
 
 export class Zone extends Entity<'zone'> {
   public override id: ZoneId;
@@ -13,9 +14,16 @@ export class Zone extends Entity<'zone'> {
     return this.game.card[this.cards[this.cards.length - 1]];
   }
 
-  static fromJson(game: Game, state: ZoneState) {
+  static fromJson(
+    game: Game,
+    state: ZoneState,
+    cards: Record<CardId, CardState>
+  ) {
     const zone = new Zone(game, state.id, state.type);
     zone.cards = state.cards;
+    for (const id of zone.cards) {
+      game.card[id] = Card.fromJson(game, zone, cards[id]);
+    }
     return zone;
   }
 
@@ -35,5 +43,11 @@ export class Zone extends Entity<'zone'> {
 
   shuffle() {
     // TODO
+  }
+
+  addCard(game: Game, definition: CardDefinition) {
+    const card = new Card(game, this, game.nextId++, definition);
+    this.cards.push(card.id);
+    game.card[card.id] = card;
   }
 }

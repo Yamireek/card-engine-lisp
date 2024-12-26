@@ -4,7 +4,7 @@ import { Game } from './Game';
 import { PlayerState } from '../state/State';
 import { mapValues } from 'lodash';
 import { Zone } from './Zone';
-import { PlayerZoneType } from '../state';
+import { GameState, PlayerZoneType } from '../state';
 import { repeat } from '../utils';
 
 export class Player extends Entity<'player'> {
@@ -17,9 +17,11 @@ export class Player extends Entity<'player'> {
     engaged: new Zone(this.game, this.game.nextId++, 'engaged'),
   };
 
-  static fromJson(game: Game, state: PlayerState) {
+  static fromJson(game: Game, state: PlayerState, cards: GameState['card']) {
     const player = new Player(game, state.id);
-    player.zone = mapValues(state.zone, (zone) => Zone.fromJson(game, zone));
+    player.zone = mapValues(state.zone, (zone) =>
+      Zone.fromJson(game, zone, cards)
+    );
     return player;
   }
 
