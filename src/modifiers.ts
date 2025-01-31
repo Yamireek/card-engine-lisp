@@ -10,10 +10,12 @@ import {
   PlayerZoneType,
   PrintedProps,
   Side,
+  toInstructions,
   Tokens,
   ZoneId,
   ZoneType,
 } from '@card-engine-lisp/engine';
+import { parse } from 'meriyah';
 
 export type CardDefinition = {
   front: CardProps;
@@ -60,16 +62,15 @@ export type Modifier = {
 };
 
 export type Ability = {
-  type: 'modifier';
   description: string;
-  code: (self: CardId) => Effect;
+  code: (self: Card) => Effect;
 };
 
 export type CardProps = PrintedProps & { abilities: Array<Ability> };
 
 export type Effect = {
   type: 'card';
-  target: (card: Card) => boolean;
+  target: Card | ((card: Card) => boolean);
   modifier: (card: Card) => Modifier;
 };
 
@@ -168,19 +169,20 @@ export class Game {
 
     for (const card of this.cards) {
       for (const ability of card.props.abilities) {
-        if (ability.type === 'modifier') {
-          effects.push(ability.code(card.id));
-        }
+        effects.push(ability.code(card));
       }
     }
 
     for (const effect of [...effects, ...this.effects]) {
-      for (const card of this.cards) {
-        if (effect.target(card)) {
-          const modifier = effect.modifier(card);
-          card.modifiers.push(modifier);
-          applyModifiers(card.props, card.modifiers);
-        }
+      const targets =
+        effect.target instanceof Card
+          ? [effect.target]
+          : this.cards.filter(effect.target);
+
+      for (const card of targets) {
+        const modifier = effect.modifier(card);
+        card.modifiers.push(modifier);
+        applyModifiers(card.props, card.modifiers);
       }
     }
   }
@@ -279,16 +281,15 @@ const testHero = hero(
     traits: [],
   },
   {
-    type: 'modifier',
     description: '+1 attack for each damage token',
     code: (self) => {
       return {
         type: 'card',
-        target: (c) => c.id === self,
-        modifier: (c) => ({
+        target: self,
+        modifier: (card) => ({
           property: 'attack',
           operator: '+=',
-          value: c.token.damage,
+          value: card.token.damage,
         }),
       };
     },
@@ -317,3 +318,6 @@ const game = new Game({
 
 game.cards[0].dealDamage(5);
 console.log(game.cards[0]);
+
+const code = game.cards[0].props.abilities[0].code;
+console.log(toInstructions(code.toString()));
