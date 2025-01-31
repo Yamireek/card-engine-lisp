@@ -19,6 +19,10 @@ function evaluate(code: string, vars: Env = {}) {
   }
 }
 
+it('test', () => {
+  expect(evaluate('const a = 1; const b = 2+a')).toBe(5);
+});
+
 describe('expressions', () => {
   it('numbers expression', () => {
     expect(evaluate('1+2')).toBe(3);
