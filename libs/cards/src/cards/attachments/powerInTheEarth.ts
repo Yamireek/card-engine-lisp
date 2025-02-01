@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const powerInTheEarth = attachment(
+export const powerInTheEarth = cards.add(attachment(
   {
     name: 'Power in the Earth',
     unique: false,
@@ -21,4 +22,4 @@ export const powerInTheEarth = attachment(
       threat: -1,
     },
   }
-);
+));

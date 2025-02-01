@@ -1,4 +1,4 @@
-import { InterpretedAgent, Interpreter, State } from '@card-engine-lisp/engine';
+import { Interpreter, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import { useEffect, useMemo } from 'react';
 import { LobbyClient } from 'boardgame.io/client';

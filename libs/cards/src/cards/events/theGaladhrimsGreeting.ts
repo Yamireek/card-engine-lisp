@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const theGaladhrimsGreeting = event(
+export const theGaladhrimsGreeting = cards.add(event(
   {
     name: "The Galadhrim's Greeting",
     cost: 3,
@@ -44,4 +45,4 @@ export const theGaladhrimsGreeting = event(
       },
     },
   }
-);
+));

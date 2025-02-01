@@ -556,7 +556,7 @@ export function stringify(obj: object) {
     },
     2
   );
-  json = json.replace(new RegExp('"' + placeholder + '"', 'g'), function (_) {
+  json = json.replace(new RegExp('"' + placeholder + '"', 'g'), function () {
     return fns.shift();
   });
 

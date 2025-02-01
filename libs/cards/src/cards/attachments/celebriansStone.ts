@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const celebriansStone = attachment(
+export const celebriansStone = cards.add(attachment(
   {
     name: "Celebrían's Stone",
     unique: true,
@@ -38,4 +39,4 @@ export const celebriansStone = attachment(
       },
     ],
   }
-);
+));

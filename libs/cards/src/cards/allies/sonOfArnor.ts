@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const sonOfArnor = ally(
+export const sonOfArnor = cards.add(ally(
   {
     name: 'Son of Arnor',
     cost: 3,
@@ -30,4 +31,4 @@ export const sonOfArnor = ally(
       },
     },
   }
-);
+));

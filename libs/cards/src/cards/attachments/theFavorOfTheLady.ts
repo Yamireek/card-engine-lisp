@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const theFavorOfTheLady = attachment(
+export const theFavorOfTheLady = cards.add(attachment(
   {
     name: 'The Favor of the Lady',
     unique: false,
@@ -21,4 +22,4 @@ export const theFavorOfTheLady = attachment(
       willpower: 1,
     },
   }
-);
+));

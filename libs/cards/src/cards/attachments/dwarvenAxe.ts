@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const dwarvenAxe = attachment(
+export const dwarvenAxe = cards.add(attachment(
   {
     name: 'Dwarven Axe',
     unique: false,
@@ -33,4 +34,4 @@ export const dwarvenAxe = attachment(
       },
     },
   }
-);
+));

@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const commonCause = event(
+export const commonCause = cards.add(event(
   {
     name: 'Common Cause',
     cost: 0,
@@ -40,4 +41,4 @@ export const commonCause = event(
       },
     },
   }
-);
+));

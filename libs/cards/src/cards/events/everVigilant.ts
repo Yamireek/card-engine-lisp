@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const everVigilant = event(
+export const everVigilant = cards.add(event(
   {
     name: 'Ever Vigilant',
     cost: 1,
@@ -19,4 +20,4 @@ export const everVigilant = event(
       },
     },
   }
-);
+));

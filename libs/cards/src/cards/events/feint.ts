@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const feint = event(
+export const feint = cards.add(event(
   {
     name: 'Feint',
     cost: 1,
@@ -28,4 +29,4 @@ export const feint = event(
       },
     },
   }
-);
+));

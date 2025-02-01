@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const forGondor = event(
+export const forGondor = cards.add(event(
   {
     name: 'For Gondor!',
     cost: 2,
@@ -34,4 +35,4 @@ export const forGondor = event(
       },
     ],
   }
-);
+));

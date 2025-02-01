@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const loreOfImladris = event(
+export const loreOfImladris = cards.add(event(
   {
     name: 'Lore of Imladris',
     cost: 2,
@@ -22,4 +23,4 @@ export const loreOfImladris = event(
       },
     },
   }
-);
+));

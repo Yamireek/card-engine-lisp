@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const aLightInIheDark = event(
+export const aLightInIheDark = cards.add(event(
   {
     name: 'A Light in the Dark',
     cost: 2,
@@ -24,4 +25,4 @@ export const aLightInIheDark = event(
       },
     },
   }
-);
+));

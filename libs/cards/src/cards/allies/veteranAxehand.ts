@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const veteranAxehand = ally({
+export const veteranAxehand = cards.add(ally({
   name: 'Veteran Axehand',
   cost: 2,
   willpower: 0,
@@ -10,4 +11,4 @@ export const veteranAxehand = ally({
   traits: ['dwarf', 'warrior'],
   sphere: 'tactics',
   unique: false,
-});
+}));

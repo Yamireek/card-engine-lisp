@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const guardOfTheCitadel = ally({
+export const guardOfTheCitadel = cards.add(ally({
   name: 'Guard of the Citadel',
   cost: 2,
   willpower: 1,
@@ -10,4 +11,4 @@ export const guardOfTheCitadel = ally({
   traits: ['gondor', 'warrior'],
   sphere: 'leadership',
   unique: false,
-});
+}));

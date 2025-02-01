@@ -14,7 +14,6 @@ import { clone, last, reverse } from 'ramda';
 import { StaticAgent } from './agent/StaticAgent';
 import { InterpretedAgent } from './agent/InterpretedAgent';
 import { State } from './state/State';
-import { Agent } from './agent';
 import { Game } from './entity';
 import { CardsRepo } from './repo';
 

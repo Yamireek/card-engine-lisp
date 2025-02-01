@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const swiftStrike = event(
+export const swiftStrike = cards.add(event(
   {
     name: 'Swift Strike',
     cost: 2,
@@ -22,4 +23,4 @@ export const swiftStrike = event(
       },
     },
   }
-);
+));

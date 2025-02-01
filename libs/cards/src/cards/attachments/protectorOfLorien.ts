@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const protectorOfLorien = attachment(
+export const protectorOfLorien = cards.add(attachment(
   {
     name: 'Protector of Lórien',
     unique: false,
@@ -75,4 +76,4 @@ export const protectorOfLorien = attachment(
       },
     },
   }
-);
+));

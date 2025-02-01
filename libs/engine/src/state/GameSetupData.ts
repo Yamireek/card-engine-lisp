@@ -1,3 +1,4 @@
+import { GameState } from '.';
 import { Card } from '../entity';
 import { Difficulty, Orientation } from './enums';
 import { PrintedProps } from './PrintedProps';
@@ -47,7 +48,7 @@ export type ScenarioSetupData = {
   data: ScenarioSetup;
 };
 
-export type JSONSetupData = { type: 'json'; data: any };
+export type JSONSetupData = { type: 'json'; data: GameState };
 
 export type GameSetupData = ScenarioSetupData | JSONSetupData;
 

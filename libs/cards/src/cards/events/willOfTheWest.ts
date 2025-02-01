@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const willOfTheWest = event(
+export const willOfTheWest = cards.add(event(
   {
     name: 'Will of the West',
     cost: 1,
@@ -39,4 +40,4 @@ export const willOfTheWest = event(
       { card: 'self', action: { move: { to: 'removed' } } },
     ],
   }
-);
+));

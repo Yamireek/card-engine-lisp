@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Instruction, valueToString } from '@card-engine-lisp/engine';
 import { Chip, Avatar } from '@mui/material';
 

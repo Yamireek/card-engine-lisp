@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CardId, PlayerId, ZoneId } from './types';
 import {
   CardRef,
@@ -12,7 +13,6 @@ import {
   GameZoneType,
   PlayerZoneType,
   Side,
-  State,
   ZoneType,
 } from '../state';
 import { Player } from './Player';
@@ -46,23 +46,26 @@ export class Game {
         this.addPlayer(playerDeck);
       }
     } else {
-      this.nextId = setup.data.nextId;
+      const state = setup.data;
 
-      for (const player of setup.data.players) {
+      this.nextId = state.nextId;
+
+      for (const player of state.players) {
         (this.player as any)[player.id as any] = new Player(this, player.id);
       }
 
-      for (const card of setup.data.cards) {
+      for (const card of state.cards) {
         this.card[card.id] = new Card(this, card.id, card.ref, card.up);
         this.card[card.id].token = card.token;
       }
 
-      for (const zone of setup.data.zones) {
-        const newZone = new Zone(this, zone.id, zone.type);
-
-        if (zone.owner) {
-          newZone.owner = (this.player as any)[zone.owner as any];
-        }
+      for (const zone of state.zones) {
+        const newZone = new Zone(
+          this,
+          zone.id,
+          zone.type as any,
+          zone.owner ? (this.player as any)[zone.owner as any] : undefined
+        );
 
         for (const cardId of zone.cards) {
           newZone.cards.push(this.card[cardId]);
@@ -71,7 +74,7 @@ export class Game {
         this.zone[zone.id] = newZone;
       }
 
-      for (const effect of setup.data.effects) {
+      for (const effect of state.effects) {
         this.effects.push(eval(effect));
       }
     }
@@ -143,11 +146,19 @@ export class Game {
   }
 
   getCard(name: string) {
-    return this.cards.find((c) => c.props.name === name)!;
+    const card = this.cards.find((c) => c.props.name === name);
+    if (!card) {
+      throw new Error('card not found');
+    }
+    return card;
   }
 
   getZone(type: GameZoneType) {
-    return this.zones.find((z) => z.type === type && !z.owner)!;
+    const zone = this.zones.find((z) => z.type === type && !z.owner);
+    if (!zone) {
+      throw new Error('zone not found');
+    }
+    return zone;
   }
 
   recalculate() {

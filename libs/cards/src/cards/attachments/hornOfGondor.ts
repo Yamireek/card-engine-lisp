@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const hornOfGondor = attachment(
+export const hornOfGondor = cards.add(attachment(
   {
     name: 'Horn of Gondor',
     unique: true,
@@ -36,4 +37,4 @@ export const hornOfGondor = attachment(
       },
     },
   }
-);
+));

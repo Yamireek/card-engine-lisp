@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const citadelPlate = attachment(
+export const citadelPlate = cards.add(attachment(
   {
     name: 'Citadel Plate',
     unique: false,
@@ -21,4 +22,4 @@ export const citadelPlate = attachment(
       hitPoints: 4,
     },
   }
-);
+));

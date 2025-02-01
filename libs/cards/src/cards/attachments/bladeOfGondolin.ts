@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const bladeOfGondolin = attachment(
+export const bladeOfGondolin = cards.add(attachment(
   {
     name: 'Blade of Gondolin',
     unique: false,
@@ -60,4 +61,4 @@ export const bladeOfGondolin = attachment(
       },
     },
   }
-);
+));

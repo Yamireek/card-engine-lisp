@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const hastyStroke = event(
+export const hastyStroke = cards.add(event(
   {
     name: 'Hasty Stroke',
     cost: 1,
@@ -16,4 +17,4 @@ export const hastyStroke = event(
       },
     },
   }
-);
+));

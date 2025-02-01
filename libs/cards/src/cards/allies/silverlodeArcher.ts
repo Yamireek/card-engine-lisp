@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const silverlodeArcher = ally({
+export const silverlodeArcher = cards.add(ally({
   name: 'Silverlode Archer',
   cost: 3,
   willpower: 1,
@@ -13,4 +14,4 @@ export const silverlodeArcher = ally({
   keywords: {
     ranged: true,
   },
-});
+}));

@@ -8,7 +8,7 @@ import {
   Modifier,
   Side,
 } from '../state';
-import { cloneDeep, max, min } from 'lodash';
+import { cloneDeep, max } from 'lodash';
 
 export class Card {
   public def: CardDefinition;

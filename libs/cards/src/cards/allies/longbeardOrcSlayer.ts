@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const longbeardOrcSlayer = ally(
+export const longbeardOrcSlayer = cards.add(ally(
   {
     name: 'Longbeard Orc Slayer',
     cost: 4,
@@ -29,4 +30,4 @@ export const longbeardOrcSlayer = ally(
       },
     },
   }
-);
+));

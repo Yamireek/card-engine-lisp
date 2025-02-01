@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const gondorianSpearman = ally(
+export const gondorianSpearman = cards.add(ally(
   {
     name: 'Gondorian Spearman',
     unique: false,
@@ -31,4 +32,4 @@ export const gondorianSpearman = ally(
       },
     },
   }
-);
+));

@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const gandalfsSearch = event(
+export const gandalfsSearch = cards.add(event(
   {
     name: "Gandalf's Search",
     cost: 'X',
@@ -104,4 +105,4 @@ export const gandalfsSearch = event(
       },
     },
   }
-);
+));

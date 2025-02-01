@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve",
-    "build": "tsc -b && nx build",
+    "build": "tsc --noEmit && nx build",
     "test": "nx test",
     "test-ui": "npx vitest --ui --coverage --no-isolate --watch",
     "lint": "nx run-many -t lint --max-warnings=0 --fix",

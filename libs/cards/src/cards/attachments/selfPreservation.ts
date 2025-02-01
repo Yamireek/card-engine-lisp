@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const selfPreservation = attachment(
+export const selfPreservation = cards.add(attachment(
   {
     name: 'Self Preservation',
     unique: false,
@@ -28,4 +29,4 @@ export const selfPreservation = attachment(
       },
     },
   }
-);
+));

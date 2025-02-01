@@ -1,6 +1,7 @@
 import { event } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const strengthOfWill = event(
+export const strengthOfWill = cards.add(event(
   {
     name: 'Strength of Will',
     cost: 0,
@@ -35,4 +36,4 @@ export const strengthOfWill = event(
       ],
     },
   }
-);
+));

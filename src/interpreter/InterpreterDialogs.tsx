@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Interpreter, Value } from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
 import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';

@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const forestSnare = attachment(
+export const forestSnare = cards.add(attachment(
   {
     name: 'Forest Snare',
     unique: false,
@@ -23,4 +24,4 @@ export const forestSnare = attachment(
       },
     },
   }
-);
+));

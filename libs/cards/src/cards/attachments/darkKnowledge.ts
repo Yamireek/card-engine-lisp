@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const darkKnowledge = attachment(
+export const darkKnowledge = cards.add(attachment(
   {
     name: 'Dark Knowledge',
     unique: false,
@@ -43,4 +44,4 @@ export const darkKnowledge = attachment(
       },
     ],
   }
-);
+));

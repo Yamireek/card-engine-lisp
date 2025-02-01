@@ -1,6 +1,7 @@
 import { attachment } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const unexpectedCourage = attachment(
+export const unexpectedCourage = cards.add(attachment(
   {
     name: 'Unexpected Courage',
     unique: false,
@@ -27,4 +28,4 @@ export const unexpectedCourage = attachment(
       },
     },
   }
-);
+));

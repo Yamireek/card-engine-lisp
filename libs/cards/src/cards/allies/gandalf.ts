@@ -1,6 +1,7 @@
 import { ally } from "@card-engine-lisp/engine";
+import { cards } from "../../repo";
 
-export const gandalf = ally(
+export const gandalf = cards.add(ally(
   {
     name: 'Gandalf',
     unique: true,
@@ -81,4 +82,4 @@ export const gandalf = ally(
       },
     },
   }
-);
+));
