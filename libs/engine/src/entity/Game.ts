@@ -8,9 +8,11 @@ import {
 } from '../state/GameSetupData';
 import {
   Difficulty,
+  GameState,
   GameZoneType,
   PlayerZoneType,
   Side,
+  State,
   ZoneType,
 } from '../state';
 import { Player } from './Player';
@@ -27,7 +29,7 @@ export class Game {
   public card: Record<CardId, Card> = {};
   public effects: Effect[] = [];
 
-  toJSON(): any {
+  toJSON(): GameState {
     return {
       nextId: this.nextId,
       players: values(this.player).map((p) => p.toJSON()),

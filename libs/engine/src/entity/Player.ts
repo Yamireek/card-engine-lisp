@@ -10,7 +10,7 @@ import { repeat } from '../utils';
 export class Player {
   public zones: Zone[] = [];
 
-  toJSON(): any {
+  toJSON(): PlayerState {
     return { id: this.id };
   }
 

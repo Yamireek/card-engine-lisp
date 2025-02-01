@@ -1,6 +1,13 @@
 import { Tokens, CardId } from './types';
 import { Game } from './Game';
-import { CardDefinition, CardProps, CardRef, Modifier, Side } from '../state';
+import {
+  CardDefinition,
+  CardProps,
+  CardRef,
+  CardState,
+  Modifier,
+  Side,
+} from '../state';
 import { cloneDeep, max, min } from 'lodash';
 
 export class Card {
@@ -11,7 +18,7 @@ export class Card {
 
   public token: Tokens = { damage: 0, progress: 0, resource: 0 };
 
-  toJSON(): any {
+  toJSON(): CardState {
     return {
       id: this.id,
       ref: this.ref,

@@ -17,7 +17,7 @@ import { Player } from './Player';
 export class Zone {
   public cards: Card[] = [];
 
-  toJSON(): any {
+  toJSON(): ZoneState {
     return {
       id: this.id,
       type: this.type,
