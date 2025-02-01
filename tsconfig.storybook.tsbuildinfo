@@ -1,0 +1,1 @@
+{"root":["./node_modules/@nx/react/typings/styled-jsx.d.ts","./node_modules/@nx/react/typings/cssmodule.d.ts","./node_modules/@nx/react/typings/image.d.ts","./src/dialogs/choosedistributiondialog.stories.tsx","./src/dialogs/chooseoptiondialog.stories.tsx","./src/dialogs/loadingdialog.stories.tsx","./.storybook/main.ts","./.storybook/preview.ts"],"version":"5.6.3"}

@@ -23,6 +23,7 @@ import { ValueView } from './ValueView';
 import { InfoPanel } from './InfoPanel';
 import { InstructionView } from './InstructionView';
 import { InterpreterDialogs } from './InterpreterDialogs';
+import { cards } from '@card-engine-lisp/cards';
 
 const codeheight = 300;
 
@@ -45,16 +46,31 @@ export const InterpreterView = observer(() => {
   }, [code]);
 
   const interpreter = useMemo(() => {
-    const game = new Game(new InterpretedAgent());
-    //game.addCard({ name: 'HERO', type: 'hero', att: 2, def: 2 });
-    //game.addCard({ name: 'ALLY', type: 'ally', att: 1, def: 1 });
-    game.addCard({ name: 'ENEMY', type: 'enemy', att: 3, def: 3 });
+    const game = new Game(cards, {
+      type: 'scenario',
+      data: {
+        players: [],
+        difficulty: 'easy',
+        extra: { cards: 0, resources: 0 },
+        scenario: {
+          name: '',
+          sets: [],
+          quest: [],
+        },
+      },
+    });
+
     return new Interpreter(instructions, game, true);
   }, [instructions]);
 
   return (
     <React.Fragment>
-      <InterpreterDialogs interpreter={interpreter} />
+      <InterpreterDialogs
+        interpreter={interpreter}
+        onChoice={() => {
+          return;
+        }}
+      />
       <Box>
         <Box sx={{ height: codeheight, display: 'flex', flexDirection: 'row' }}>
           <InfoPanel label="Program" sx={{ flexGrow: 1, margin: '4px' }}>
@@ -108,7 +124,7 @@ export const InterpreterView = observer(() => {
               ))}
             </Stack>
           </InfoPanel>
-          <InfoPanel label="Variables" sx={{ margin: '4px', width: 400 }}>
+          {/* <InfoPanel label="Variables" sx={{ margin: '4px', width: 400 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -127,7 +143,7 @@ export const InterpreterView = observer(() => {
                 ))}
               </TableBody>
             </Table>
-          </InfoPanel>
+          </InfoPanel> */}
         </Box>
       </Box>
     </React.Fragment>

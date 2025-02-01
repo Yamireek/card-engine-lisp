@@ -17,6 +17,7 @@ import { CardsRepo, keys } from '@card-engine-lisp/engine';
 import { SetupParams } from './../game/types';
 import { GameSetupDialog } from './../game/GameSetupDialog';
 import { useDialogs } from './../dialogs/DialogsContext';
+import { cards } from '@card-engine-lisp/cards';
 
 export const GAME_NAME = 'LotrLCG';
 
@@ -60,7 +61,7 @@ export const LobbyPage = () => {
               action: async (r) => r,
             });
 
-            const matchId = await createMatch(params, lobby);
+            const matchId = await createMatch(params, lobby, cards);
 
             const credentials = await lobby.joinMatch(GAME_NAME, matchId, {
               playerName: settings.value.playerName,

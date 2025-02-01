@@ -14,11 +14,11 @@ export const InterpreterDialogs = observer(
     }
 
     return (
-      <ChooseOptionDialog
+      <ChooseOptionDialog<Value>
         title={choice.title}
         min={choice.min}
         max={choice.max}
-        choices={choice.options.map((o) => ({
+        choices={choice.options.map((o: any) => ({
           id: o.value,
           title: o.label,
         }))}

@@ -29,14 +29,14 @@ export const CardDetail = (props: { cardId?: CardId }) => {
 
   const card = game.card[cardId];
 
-  const name = card.definition.front.name ?? ''; // TODO
+  const name = card.def.front.name ?? ''; // TODO
   const exhaused = false; // card.state.tapped ? 'E' : ''; // TODO
-  const unique = card.definition.front.unique ? 'U' : ''; // TODO
+  const unique = card.def.front.unique ? 'U' : ''; // TODO
 
   return (
     <CardText
       title={`${name} (${card.id}) [${exhaused}${unique}]`}
-      sphere={card.definition.front.sphere}
+      sphere={card.def.front.sphere}
       text={
         [] // TODO
         // card.sideUp !== 'shadow'
@@ -46,14 +46,14 @@ export const CardDetail = (props: { cardId?: CardId }) => {
         //   : card.view.rules.shadows?.map((s) => s.description) ?? []
       }
       attachments={[]}
-      traits={card.definition.front.traits ?? []}
+      traits={card.def.front.traits ?? []}
       properties={cardProperties.map((p) => ({
         name: p,
-        printed: card.definition.front[p],
-        current: card.definition.front[p], // TODO
+        printed: card.def.front[p],
+        current: card.def.front[p], // TODO
       }))}
       tokens={card.token}
-      keywords={card.definition.front.keywords ?? {}}
+      keywords={card.def.front.keywords ?? {}}
     />
   );
 };

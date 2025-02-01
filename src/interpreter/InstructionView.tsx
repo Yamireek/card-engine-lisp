@@ -11,7 +11,7 @@ export const InstructionView = (props: { i: Instruction }) => {
       avatar={<Avatar>{props.i[0].slice(0, 1)}</Avatar>}
       label={props.i
         .slice(1)
-        .flatMap((v) => valueToString(v))
+        .flatMap((v) => valueToString(v as any))
         .join(', ')}
     />
   );
