@@ -1,4 +1,4 @@
-import { Tokens, CardId } from './types';
+import { Tokens, CardId, Token } from './types';
 import { Game } from './Game';
 import {
   CardDefinition,
@@ -37,13 +37,14 @@ export class Card {
     this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
   }
 
-  dealDamage(amount: number) {
-    this.token.damage += amount;
-    this.game.recalculate();
+  addToken(amount: number, token: Token) {
+    this.token[token] += amount;
+    return true;
   }
 
-  heal(amount: number) {
-    this.token.damage = max([this.token.damage - amount, 0]) ?? 0;
-    this.game.recalculate();
+  removeToken(amount: number, token: Token) {
+    const removed = max([this.token[token], amount]) ?? 0;
+    this.token[token] -= removed;
+    return removed > 0;
   }
 }

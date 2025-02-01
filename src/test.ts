@@ -1,5 +1,5 @@
-/* eslint-disable no-eval */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
+ 
 import { CardsRepo, Game, hero } from '@card-engine-lisp/engine';
 
 const cards = new CardsRepo('test');
