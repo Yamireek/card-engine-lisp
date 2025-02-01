@@ -14,6 +14,7 @@ import {
 } from 'meriyah/dist/src/estree';
 import { BinaryOperator, FunctionValue, Instruction, Value } from './types';
 import { Entity } from './entity/Entity';
+import _ from 'lodash';
 
 export function asArray<T>(items: T | T[]): T[] {
   if (isArray(items)) {
@@ -439,6 +440,13 @@ export function values<TK extends string | number, TI>(
     return [];
   }
   return Object.values(records) as TI[];
+}
+
+export function mapValues<TK extends string | number, TI, TO>(
+  records: Partial<Record<TK, TI>>,
+  mapper: (item: TI) => TO
+) {
+  return _.mapValues(records, mapper) as Record<TK, TO>;
 }
 
 export function keys<TK extends string | number, TI>(

@@ -1,3 +1,4 @@
+/* eslint-disable no-eval */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cloneDeep, values } from 'lodash';
 import {
@@ -10,42 +11,45 @@ import {
   PlayerZoneType,
   PrintedProps,
   Side,
-  toInstructions,
   Tokens,
   ZoneId,
   ZoneType,
 } from '@card-engine-lisp/engine';
-import { parse } from 'meriyah';
 
 export type CardDefinition = {
+  ref: CardRef;
   front: CardProps;
   back: CardProps;
   orientation: Orientation;
 };
 
 export type EncounterSet = {
-  easy: CardDefinition[];
-  normal: CardDefinition[];
+  easy: CardRef[];
+  normal: CardRef[];
 };
 
 export type PlayerDeck = {
   name: string;
-  heroes: CardDefinition[];
-  library: CardDefinition[];
+  heroes: CardRef[];
+  library: CardRef[];
 };
 
 export type Scenario = {
   name: string;
-  quest: CardDefinition[];
+  quest: CardRef[];
   sets: EncounterSet[];
 };
 
-export type GameSetupData = {
+export type ScenarioSetupData = {
   type: 'scenario';
-  data: ScenarioSetupData;
+  data: ScenarioSetup;
 };
 
-export type ScenarioSetupData = {
+export type JSONSetupData = { type: 'json'; data: any };
+
+export type GameSetupData = ScenarioSetupData | JSONSetupData;
+
+export type ScenarioSetup = {
   players: PlayerDeck[];
   scenario: Scenario;
   difficulty: Difficulty;
@@ -55,11 +59,7 @@ export type ScenarioSetupData = {
   };
 };
 
-export type Modifier = {
-  property: string;
-  operator: '+=' | '-=';
-  value: number;
-};
+export type Modifier = (props: CardProps) => void;
 
 export type Ability = {
   description: string;
@@ -71,25 +71,81 @@ export type CardProps = PrintedProps & { abilities: Array<Ability> };
 export type Effect = {
   type: 'card';
   target: Card | ((card: Card) => boolean);
-  modifier: (card: Card) => Modifier;
+  modifier: (card: Card) => (props: CardProps) => void;
 };
+
+export type CardRef = `${string}/${number}`;
+
+export class CardsRepo {
+  private nextId = 1;
+  private defs: Record<CardRef, CardDefinition> = {};
+
+  constructor(private set: string) {}
+
+  add(def: Omit<CardDefinition, 'ref'> & { ref?: CardRef }): CardRef {
+    const ref = `${this.set}/${this.nextId++}` as CardRef;
+    def.ref = ref;
+    this.defs[ref] = def as CardDefinition;
+    return ref;
+  }
+
+  get(ref: CardRef): CardDefinition {
+    return this.defs[ref];
+  }
+}
+
+const cards = new CardsRepo('test');
 
 export class Game {
   public nextId = 1;
   public player: Partial<Record<PlayerId, Player>> = {};
   public zone: Record<ZoneId, Zone> = {};
   public card: Record<CardId, Card> = {};
-
   public effects: Effect[] = [];
 
-  constructor(setup: GameSetupData) {
+  toJSON(): object {
+    return {
+      nextId: this.nextId,
+      players: values(this.player).map((p) => p.toJSON()),
+      zones: values(this.zone).map((z) => z.toJSON()),
+      cards: values(this.card).map((c) => c.toJSON()),
+      effects: this.effects.map(stringify),
+    };
+  }
+
+  constructor(public repo: CardsRepo, setup: GameSetupData) {
     if (setup.type === 'scenario') {
       this.prepareScenario(setup.data.scenario, setup.data.difficulty);
       for (const playerDeck of setup.data.players) {
         this.addPlayer(playerDeck);
       }
     } else {
-      throw new Error('Unknown setup type: ' + setup.type);
+      if (!cards) {
+        throw new Error('missing cards repository');
+      }
+
+      this.nextId = setup.data.nextId;
+      for (const zone of setup.data.zones) {
+        this.zone[zone.id] = new Zone(this, zone.id, zone.type);
+      }
+
+      for (const player of setup.data.players) {
+        (this.player as any)[player.id as any] = new Player(this, player.id);
+      }
+
+      for (const card of setup.data.cards) {
+        this.card[card.id] = new Card(
+          this,
+          card.id,
+          cards.get(card.def),
+          card.up
+        );
+        this.card[card.id].token = card.token;
+      }
+
+      for (const effect of setup.data.effects) {
+        this.effects.push(eval(effect));
+      }
     }
 
     this.recalculate();
@@ -138,9 +194,9 @@ export class Game {
     this.addZone('victoryDisplay');
   }
 
-  addCard(def: CardDefinition, up: Side) {
+  addCard(ref: CardRef, up: Side) {
     const id = this.nextId++;
-    const card = new Card(this, id, def, up);
+    const card = new Card(this, id, this.repo.get(ref), up);
     this.card[id] = card;
     return card;
   }
@@ -161,7 +217,7 @@ export class Game {
     for (const card of this.cards) {
       card.modifiers = [];
       card.props = cloneDeep(
-        card.sideUp === 'front' ? card.def.front : card.def.back
+        card.up === 'front' ? card.def.front : card.def.back
       );
     }
 
@@ -180,9 +236,9 @@ export class Game {
           : this.cards.filter(effect.target);
 
       for (const card of targets) {
-        const modifier = effect.modifier(card);
-        card.modifiers.push(modifier);
-        applyModifiers(card.props, card.modifiers);
+        const modify = effect.modifier(card);
+        card.modifiers.push(modify);
+        modify(card.props);
       }
     }
   }
@@ -195,13 +251,22 @@ export class Card {
 
   public token: Tokens = { damage: 0, progress: 0, resource: 0 };
 
+  toJSON(): any {
+    return {
+      id: this.id,
+      def: this.def.ref,
+      up: this.up,
+      token: this.token,
+    };
+  }
+
   constructor(
     public game: Game,
     public id: CardId,
     public def: CardDefinition,
-    public sideUp: Side
+    public up: Side
   ) {
-    this.props = cloneDeep(sideUp === 'front' ? def.front : def.back);
+    this.props = cloneDeep(up === 'front' ? def.front : def.back);
   }
 
   dealDamage(amount: number) {
@@ -213,11 +278,24 @@ export class Card {
 export class Player {
   public zones: Zone[] = [];
 
+  toJSON(): any {
+    return { id: this.id };
+  }
+
   constructor(public game: Game, public id: PlayerId) {}
 }
 
 export class Zone {
   public cards: Card[] = [];
+
+  toJSON(): any {
+    return {
+      id: this.id,
+      type: this.type,
+      cards: this.cards.map((c) => c.id),
+      owner: this.owner?.id,
+    };
+  }
 
   constructor(game: Game, id: ZoneId, type: GameZoneType);
   constructor(game: Game, id: ZoneId, type: PlayerZoneType, owner: Player);
@@ -228,7 +306,7 @@ export class Zone {
     public owner?: Player
   ) {}
 
-  addCards(definitions: CardDefinition[], up: Side) {
+  addCards(definitions: CardRef[], up: Side) {
     for (const def of definitions) {
       const card = this.game.addCard(def, up);
       this.cards.push(card);
@@ -236,21 +314,10 @@ export class Zone {
   }
 }
 
-export function applyModifiers(props: any, modifiers: Modifier[]) {
-  for (const modifier of modifiers) {
-    const { property, operator, value } = modifier;
-    if (operator === '+=') {
-      props[property] += value;
-    } else if (operator === '-=') {
-      props[property] -= value;
-    }
-  }
-}
-
 export function hero(
   props: Omit<HeroProps, 'type' | 'unique'>,
   ...abilities: Ability[]
-): CardDefinition {
+): Omit<CardDefinition, 'ref'> {
   return {
     front: {
       ...props,
@@ -269,34 +336,36 @@ export function hero(
   };
 }
 
-const testHero = hero(
-  {
-    name: 'hero',
-    attack: 1,
-    defense: 1,
-    willpower: 1,
-    hitPoints: 6,
-    sphere: 'lore',
-    threatCost: 5,
-    traits: [],
-  },
-  {
-    description: '+1 attack for each damage token',
-    code: (self) => {
-      return {
-        type: 'card',
-        target: self,
-        modifier: (card) => ({
-          property: 'attack',
-          operator: '+=',
-          value: card.token.damage,
-        }),
-      };
+const testHero = cards.add(
+  hero(
+    {
+      name: 'hero',
+      attack: 1,
+      defense: 1,
+      willpower: 1,
+      hitPoints: 6,
+      sphere: 'lore',
+      threatCost: 5,
+      traits: [],
     },
-  }
+    {
+      description: '+1 attack for each damage token',
+      code: (self) => {
+        return {
+          type: 'card',
+          target: self,
+          modifier: (card) => (p) => {
+            if (p.attack !== undefined) {
+              p.attack += card.token.damage;
+            }
+          },
+        };
+      },
+    }
+  )
 );
 
-const game = new Game({
+const game = new Game(cards, {
   type: 'scenario',
   data: {
     scenario: {
@@ -317,7 +386,44 @@ const game = new Game({
 });
 
 game.cards[0].dealDamage(5);
+
+game.effects.push({
+  type: 'card',
+  target: () => true,
+  modifier: (card) => (props) => (props.defense = 0),
+});
+
+game.recalculate();
+game.recalculate();
+
 console.log(game.cards[0]);
 
-const code = game.cards[0].props.abilities[0].code;
-console.log(toInstructions(code.toString()));
+export function stringify(obj: object) {
+  const placeholder = '____PLACEHOLDER____';
+  const fns: Array<any> = [];
+  let json = JSON.stringify(
+    obj,
+    function (key, value) {
+      if (typeof value === 'function') {
+        fns.push(value);
+        return placeholder;
+      }
+      return value;
+    },
+    2
+  );
+  json = json.replace(new RegExp('"' + placeholder + '"', 'g'), function (_) {
+    return fns.shift();
+  });
+
+  return `(${json})`;
+}
+
+console.log(game.toJSON());
+
+console.log(
+  new Game(cards, {
+    type: 'json',
+    data: game.toJSON(),
+  })
+);
