@@ -1,7 +1,7 @@
 import { Tokens, CardId } from './types';
 import { Game } from './Game';
 import { CardDefinition, CardProps, CardRef, Modifier, Side } from '../state';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, max, min } from 'lodash';
 
 export class Card {
   public def: CardDefinition;
@@ -32,6 +32,11 @@ export class Card {
 
   dealDamage(amount: number) {
     this.token.damage += amount;
+    this.game.recalculate();
+  }
+
+  heal(amount: number) {
+    this.token.damage = max([this.token.damage - amount, 0]) ?? 0;
     this.game.recalculate();
   }
 }

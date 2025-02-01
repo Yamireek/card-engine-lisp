@@ -140,6 +140,10 @@ export class Game {
     return values(this.zone);
   }
 
+  getCard(name: string) {
+    return this.cards.find((c) => c.props.name === name)!;
+  }
+
   getZone(type: GameZoneType) {
     return this.zones.find((z) => z.type === type && !z.owner)!;
   }
