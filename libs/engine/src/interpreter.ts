@@ -16,6 +16,7 @@ import { InterpretedAgent } from './agent/InterpretedAgent';
 import { State } from './state/State';
 import { Agent } from './agent';
 import { Game } from './entity';
+import { CardsRepo } from './repo';
 
 const operations: Record<BinaryOperator, (...args: any[]) => any> = {
   '+': (a, b) => a + b,
@@ -34,18 +35,21 @@ export class Interpreter {
 
   public frames: Env[] = [{}];
 
-  static fromJson(state: State, agent: Agent) {
+  static fromJson(state: State, repo: CardsRepo) {
     const cloned = clone(state);
-    const game = Game.fromJson(cloned.game, agent);
+    const game = new Game(repo, {
+      type: 'json',
+      data: state.game,
+    });
     const interpreter = new Interpreter(cloned.instructions, game, false);
     interpreter.stack = cloned.stack.map((v) => fromValue(v, game));
     interpreter.frames = cloned.frames;
     return interpreter;
   }
 
-  toJson(): State {
+  toJSON(): State {
     return {
-      game: this.game.toJson(),
+      game: this.game.toJSON(),
       stack: this.stack.map((v) => toValue(v)),
       frames: this.frames,
       instructions: this.instructions,
@@ -54,7 +58,7 @@ export class Interpreter {
 
   constructor(
     public instructions: Instruction[],
-    public game: Game = new Game(new StaticAgent([])),
+    public game: Game,
     public observable = false
   ) {
     if (observable) {

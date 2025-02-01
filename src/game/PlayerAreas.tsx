@@ -33,13 +33,16 @@ export const PlayerAreas = (props: { player: Player }) => {
       position={positions[playerCount][props.player.id]}
       rotation={[0, 0, rotations[playerCount][props.player.id] ?? 0]}
     >
-      <LotrDeck3d zone={props.player.zone.library} position={[0.39, -0.4, 0]} />
       <LotrDeck3d
-        zone={props.player.zone.discardPile}
+        zone={props.player.getZone('library')}
+        position={[0.39, -0.4, 0]}
+      />
+      <LotrDeck3d
+        zone={props.player.getZone('discardPile')}
         position={[0.39, -0.5, 0]}
       />
       <LotrCardArea
-        cards={props.player.zone.playerArea.cards.map((id) => game.card[id])}
+        cards={props.player.getZone('playerArea').cards}
         layout={{
           position: [0.025, -0.45],
           size: { width: 0.65, height: 0.2 },
@@ -47,7 +50,7 @@ export const PlayerAreas = (props: { player: Player }) => {
         }}
       />
       <LotrCardArea
-        cards={props.player.zone.engaged.cards.map((id) => game.card[id])}
+        cards={props.player.getZone('engaged').cards}
         layout={{
           position: [0.065, -0.3],
           size: { width: 0.73, height: 0.1 },

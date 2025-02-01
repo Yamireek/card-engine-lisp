@@ -1,54 +1,37 @@
-import { Entity } from './Entity';
 import { Tokens, CardId } from './types';
 import { Game } from './Game';
-import { CardState } from '../state/State';
-import { CardDefinition, Side } from '../state';
-import { Zone } from './Zone';
-import { remove } from '../utils';
+import { CardDefinition, CardProps, CardRef, Modifier, Side } from '../state';
+import { cloneDeep } from 'lodash';
 
-export class Card extends Entity<'card'> {
-  public override id: number;
-  public definition: CardDefinition;
-  public sideUp: Side = 'front';
+export class Card {
+  public def: CardDefinition;
+  public props: CardProps;
+
+  public modifiers: Modifier[] = [];
+
   public token: Tokens = { damage: 0, progress: 0, resource: 0 };
 
-  static fromJson(game: Game, zone: Zone, state: CardState) {
-    const card = new Card(game, zone, state.id, state.definition);
-    card.token = state.tokens;
-    card.sideUp = state.sideUp;
-    return card;
-  }
-
-  toJson(): CardState {
+  toJSON(): any {
     return {
       id: this.id,
-      definition: this.definition,
-      sideUp: this.sideUp,
-      tokens: this.token,
+      ref: this.ref,
+      up: this.up,
+      token: this.token,
     };
   }
 
   constructor(
     public game: Game,
-    public zone: Zone,
-    id: CardId,
-    definition: CardDefinition
+    public id: CardId,
+    public ref: CardRef,
+    public up: Side
   ) {
-    super(id, 'card');
-    this.id = id;
-    this.definition = definition;
-  }
-
-  generateResources(amount: number) {
-    this.token.resource += amount;
+    this.def = this.game.repo.get(ref);
+    this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
   }
 
   dealDamage(amount: number) {
     this.token.damage += amount;
-  }
-
-  move(zone: Zone) {
-    remove(this.zone.cards, this.id);
-    zone.cards.push(this.id);
+    this.game.recalculate();
   }
 }

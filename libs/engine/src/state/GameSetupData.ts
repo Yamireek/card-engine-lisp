@@ -1,38 +1,57 @@
+import { Card } from '../entity';
 import { Difficulty, Orientation } from './enums';
 import { PrintedProps } from './PrintedProps';
-import { State } from './State';
+
+export type Modifier = (props: CardProps) => void;
+
+export type Ability = {
+  description: string;
+  code: (self: Card) => Effect;
+};
+
+export type Effect = {
+  type: 'card';
+  target: Card | ((card: Card) => boolean);
+  modifier: (card: Card) => (props: CardProps) => void;
+};
+
+export type CardRef = `${string}/${number}`;
+
+export type CardProps = PrintedProps & { abilities: Array<Ability> };
 
 export type CardDefinition = {
-  front: PrintedProps;
-  back: PrintedProps;
+  front: CardProps;
+  back: CardProps;
   orientation: Orientation;
 };
 
 export type EncounterSet = {
-  easy: CardDefinition[];
-  normal: CardDefinition[];
+  easy: CardRef[];
+  normal: CardRef[];
 };
 
 export type PlayerDeck = {
   name: string;
-  heroes: CardDefinition[];
-  library: CardDefinition[];
+  heroes: CardRef[];
+  library: CardRef[];
 };
 
 export type Scenario = {
   name: string;
-  quest: CardDefinition[];
+  quest: CardRef[];
   sets: EncounterSet[];
 };
 
-export type GameSetupData =
-  | {
-      type: 'scenario';
-      data: ScenarioSetupData;
-    }
-  | { type: 'state'; state: State };
-
 export type ScenarioSetupData = {
+  type: 'scenario';
+  data: ScenarioSetup;
+};
+
+export type JSONSetupData = { type: 'json'; data: any };
+
+export type GameSetupData = ScenarioSetupData | JSONSetupData;
+
+export type ScenarioSetup = {
   players: PlayerDeck[];
   scenario: Scenario;
   difficulty: Difficulty;

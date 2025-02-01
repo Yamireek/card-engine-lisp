@@ -13,7 +13,7 @@ import { SettingsDialog } from '../settings/SettingsDialog';
 import { useSettings } from '../settings/useSettings';
 import { createNewGameState } from './createNewGameState';
 import { Matches } from './Matches';
-import { keys } from '@card-engine-lisp/engine';
+import { CardsRepo, keys } from '@card-engine-lisp/engine';
 import { SetupParams } from './../game/types';
 import { GameSetupDialog } from './../game/GameSetupDialog';
 import { useDialogs } from './../dialogs/DialogsContext';
@@ -84,7 +84,11 @@ export const LobbyPage = () => {
   );
 };
 
-async function createMatch(setup: SetupParams, lobby: LobbyClient) {
+async function createMatch(
+  setup: SetupParams,
+  lobby: LobbyClient,
+  repo: CardsRepo
+) {
   if (setup.type === 'join') {
     throw new Error('invalid params');
   }
@@ -99,7 +103,7 @@ async function createMatch(setup: SetupParams, lobby: LobbyClient) {
   }
 
   if (setup.type === 'new') {
-    const state = createNewGameState(setup);
+    const state = createNewGameState(setup, repo);
 
     const response = await lobby.createMatch('LotrLCG', {
       numPlayers: Number(setup.playerCount),

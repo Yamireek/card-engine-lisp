@@ -19,12 +19,18 @@ export const GameAreas = (props: { playerCount: number }) => {
 
   return (
     <group position={positions[playerCount]}>
-      <LotrDeck3d zone={game.zones.encounterDeck} position={[0.31, -0.2, 0]} />
-      <LotrDeck3d zone={game.zones.discardPile} position={[0.39, -0.2, 0]} />
+      <LotrDeck3d
+        zone={game.getZone('encounterDeck')}
+        position={[0.31, -0.2, 0]}
+      />
+      <LotrDeck3d
+        zone={game.getZone('discardPile')}
+        position={[0.39, -0.2, 0]}
+      />
 
       <LotrCardArea
         orientation="landscape"
-        cards={game.zones.questArea.cards.map((id) => game.card[id])}
+        cards={game.getZone('questArea').cards}
         layout={{
           position: [0.144, -0.2],
           size: { width: 0.1, height: 0.1 },
@@ -32,7 +38,7 @@ export const GameAreas = (props: { playerCount: number }) => {
       />
 
       <LotrCardArea
-        cards={game.zones.activeLocation.cards.map((id) => game.card[id])}
+        cards={game.getZone('activeLocation').cards}
         layout={{
           position: [0.23, -0.2],
           size: { width: cardSize.width + 0.01, height: 0.1 },
@@ -40,7 +46,7 @@ export const GameAreas = (props: { playerCount: number }) => {
       />
 
       <LotrCardArea
-        cards={game.zones.stagingArea.cards.map((id) => game.card[id])}
+        cards={game.getZone('stagingArea').cards}
         layout={{
           position: [-0.1, -0.2],
           size: { width: 0.4, height: 0.1 },

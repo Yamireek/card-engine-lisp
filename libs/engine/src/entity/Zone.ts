@@ -2,53 +2,43 @@ import { Entity } from './Entity';
 import { CardId, ZoneId } from './types';
 import { Game } from './Game';
 import { ZoneState } from '../state/State';
-import { CardDefinition, CardState, ZoneType } from '../state';
+import {
+  CardDefinition,
+  CardRef,
+  CardState,
+  GameZoneType,
+  PlayerZoneType,
+  Side,
+  ZoneType,
+} from '../state';
 import { Card } from './Card';
+import { Player } from './Player';
 
-export class Zone extends Entity<'zone'> {
-  public override id: ZoneId;
-  public type: ZoneType;
-  public cards: CardId[] = [];
+export class Zone {
+  public cards: Card[] = [];
 
-  static fromJson(
-    game: Game,
-    state: ZoneState,
-    cards: Record<CardId, CardState>
-  ) {
-    const zone = new Zone(game, state.id, state.type);
-    zone.cards = state.cards;
-    for (const id of zone.cards) {
-      game.card[id] = Card.fromJson(game, zone, cards[id]);
-    }
-    return zone;
-  }
-
-  toJson(): ZoneState {
+  toJSON(): any {
     return {
       id: this.id,
-      cards: this.cards,
       type: this.type,
+      cards: this.cards.map((c) => c.id),
+      owner: this.owner?.id,
     };
   }
 
-  constructor(public game: Game, id: ZoneId, type: ZoneType) {
-    super(id, 'zone');
-    this.id = id;
-    this.type = type;
-    game.zone[id] = this;
-  }
+  constructor(game: Game, id: ZoneId, type: GameZoneType);
+  constructor(game: Game, id: ZoneId, type: PlayerZoneType, owner: Player);
+  constructor(
+    public game: Game,
+    public id: ZoneId,
+    public type: GameZoneType | PlayerZoneType,
+    public owner?: Player
+  ) {}
 
-  get topCard() {
-    return this.game.card[this.cards[this.cards.length - 1]];
-  }
-
-  shuffle() {
-    // TODO
-  }
-
-  addCard(game: Game, definition: CardDefinition) {
-    const card = new Card(game, this, game.nextId++, definition);
-    this.cards.push(card.id);
-    game.card[card.id] = card;
+  addCards(definitions: CardRef[], up: Side) {
+    for (const def of definitions) {
+      const card = this.game.addCard(def, up);
+      this.cards.push(card);
+    }
   }
 }

@@ -16,7 +16,7 @@ const staticUrls = [image.progress, image.resource, image.damage];
 export function getAllImageUrls(game: Game): string[] {
   const cardUrls = uniq(
     game.cards.flatMap((c) => {
-      const images = getCardImageUrls(c.definition);
+      const images = getCardImageUrls(c.def);
       return [images.front, images.back];
     })
   );

@@ -22,11 +22,11 @@ export const LotrCard3d = (props: {
   const card = game.card[props.cardId];
 
   const textures = {
-    front: texture[getCardImageUrl(card.definition.front, 'front')],
-    back: texture[getCardImageUrl(card.definition.back, 'back')],
+    front: texture[getCardImageUrl(card.def.front, 'front')],
+    back: texture[getCardImageUrl(card.def.back, 'back')],
   };
 
-  const orientation = card.definition.orientation;
+  const orientation = card.def.orientation;
 
   return (
     <Card3d
@@ -43,7 +43,7 @@ export const LotrCard3d = (props: {
         0, //card.tapped ? -Math.PI / 4 : card.shadowOf ? Math.PI / 3 : 0,
       ]}
       texture={
-        card.sideUp === 'front' || card.sideUp === 'shadow'
+        card.up === 'front' || card.up === 'shadow'
           ? textures
           : { front: textures.back, back: textures.front }
       }

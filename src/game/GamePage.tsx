@@ -1,12 +1,13 @@
 import { useLocation } from 'react-router';
 import { LotrLCGClient } from './../bgio/LotrLCGClient';
+import { cards } from '@card-engine-lisp/cards';
 
 export const GamePage = () => {
   const location = useLocation();
 
   const setup = location.state;
 
-  const Client = LotrLCGClient(setup);
+  const Client = LotrLCGClient(setup, cards);
 
   if (setup.type === 'join') {
     return (

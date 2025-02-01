@@ -1,45 +1,10 @@
-import { PlayerDeck, event } from "@card-engine-lisp/engine";
+import { PlayerDeck, event } from '@card-engine-lisp/engine';
 import * as ally from '../cards/allies';
 import * as attachment from '../cards/attachments';
 import * as events from '../cards/events';
 import * as hero from '../cards/heroes';
 
 // https://www.youtube.com/watch?v=Pyk_PrY58g8
-
-export const testDeck: PlayerDeck = {
-  name: 'Test',
-  heroes: [hero.aragorn, hero.eowyn, hero.denethor, hero.legolas],
-  library: [
-    ally.ereborHammersmith,
-    events.sneakAttack,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    events.gandalfsSearch,
-    event(
-      { name: 'Dwarven Tomb', cost: 0, sphere: 'leadership' },
-      {
-        description: 'Discard ally in play',
-        action: {
-          card: { type: 'ally', simple: 'inAPlay' },
-          action: 'discard',
-        },
-      }
-    ),
-  ],
-};
 
 export const coreThree: PlayerDeck = {
   name: 'Core (Three spheres)',

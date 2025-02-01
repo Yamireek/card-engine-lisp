@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CardDefinition } from './GameSetupData';
+import { Ability, CardDefinition } from './GameSetupData';
 import {
   AllyProps,
   AttachmentProps,
@@ -21,30 +21,35 @@ export function ally(
       ...props,
       sphere: [props.sphere],
       type: 'ally',
+      abilities,
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
 }
 
 export function hero(
-  props: Omit<HeroProps, 'type'>,
-  ...abilities: any[]
+  props: Omit<HeroProps, 'type' | 'unique'>,
+  ...abilities: Ability[]
 ): CardDefinition {
   return {
     front: {
       ...props,
       sphere: [props.sphere],
       type: 'hero',
+      unique: true,
+      abilities,
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
@@ -60,11 +65,13 @@ export function event(
       sphere: [props.sphere],
       traits: [],
       type: 'event',
+      abilities,
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
@@ -79,11 +86,13 @@ export function attachment(
       ...props,
       sphere: [props.sphere],
       type: 'attachment',
+      abilities,
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
@@ -98,11 +107,13 @@ export function enemy(
       ...props,
       sphere: [],
       type: 'enemy',
+      abilities,
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
@@ -117,11 +128,13 @@ export function location(
       ...props,
       sphere: [],
       type: 'location',
+      abilities,
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
@@ -137,20 +150,19 @@ export function treachery(
       sphere: [],
       traits: [],
       type: 'treachery',
+      abilities,
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'portrait',
   };
 }
 
-export function quest(
-  props: QuestDefinition,
-  ...abilities: any[]
-): CardDefinition {
+export function quest(props: QuestDefinition): CardDefinition {
   const nameA = props.name ?? props.a.name;
   const nameB = props.name ?? props.b.name;
 
@@ -159,18 +171,18 @@ export function quest(
       name: nameA,
       sequence: props.sequence,
       type: 'quest',
-
       traits: [],
       sphere: [],
+      abilities: [],
     },
     back: {
       name: nameB,
       sequence: props.sequence,
       type: 'quest',
       questPoints: props.b.questPoints,
-
       traits: [],
       sphere: [],
+      abilities: [],
     },
     orientation: 'landscape',
   };

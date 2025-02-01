@@ -4,10 +4,10 @@ import { Client } from 'boardgame.io/react';
 import { LotrLCGBoard } from './LotrLCGBoard';
 import { SetupParams } from './../game/types';
 import { LoadingDialog } from './../dialogs/LoadingDialog';
-import { LotrLCGame } from '@card-engine-lisp/engine';
+import { CardsRepo, LotrLCGame } from '@card-engine-lisp/engine';
 import { createNewGameState } from './createNewGameState';
 
-export function LotrLCGClient(setup: SetupParams) {
+export function LotrLCGClient(setup: SetupParams, repo: CardsRepo) {
   if (setup.type === 'load') {
     return Client({
       game: LotrLCGame(JSON.parse(setup.state)),
@@ -30,7 +30,7 @@ export function LotrLCGClient(setup: SetupParams) {
   }
 
   if (setup.type === 'new') {
-    const state = createNewGameState(setup);
+    const state = createNewGameState(setup, repo);
 
     return Client({
       game: LotrLCGame(state),

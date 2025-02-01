@@ -1,60 +1,131 @@
 import { CardId, PlayerId, ZoneId } from './types';
-import { Entity } from './Entity';
-import { Agent } from '../agent/Agent';
-import { PlayerDeck, Scenario } from '../state/GameSetupData';
-import { Difficulty, GameState, GameZoneType } from '../state';
-import { mapValues } from 'lodash';
+import {
+  CardRef,
+  Effect,
+  GameSetupData,
+  PlayerDeck,
+  Scenario,
+} from '../state/GameSetupData';
+import {
+  Difficulty,
+  GameZoneType,
+  PlayerZoneType,
+  Side,
+  ZoneType,
+} from '../state';
 import { Player } from './Player';
 import { Zone } from './Zone';
 import { Card } from './Card';
-import { keys, values } from '../utils';
+import { stringify, values } from '../utils';
+import { CardsRepo } from '../repo';
+import { cloneDeep } from 'lodash';
 
-export class Game extends Entity<'game'> {
+export class Game {
   public nextId = 1;
-  public card: Record<CardId, Card> = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public player: Record<PlayerId, Player> = {} as any;
+  public player: Partial<Record<PlayerId, Player>> = {};
   public zone: Record<ZoneId, Zone> = {};
-  public zones: Record<GameZoneType, Zone> = {
-    questDeck: new Zone(this, this.nextId++, 'questDeck'),
-    encounterDeck: new Zone(this, this.nextId++, 'encounterDeck'),
-    stagingArea: new Zone(this, this.nextId++, 'stagingArea'),
-    questArea: new Zone(this, this.nextId++, 'questArea'),
-    activeLocation: new Zone(this, this.nextId++, 'activeLocation'),
-    discardPile: new Zone(this, this.nextId++, 'discardPile'),
-    victoryDisplay: new Zone(this, this.nextId++, 'victoryDisplay'),
-    removed: new Zone(this, this.nextId++, 'removed'),
-  };
+  public card: Record<CardId, Card> = {};
+  public effects: Effect[] = [];
 
-  static fromJson(state: GameState, agent: Agent) {
-    const game = new Game(agent);
-
-    for (const key of keys(state.player)) {
-      const card = state.player[key];
-      game.player[key] = Player.fromJson(game, card, state.card);
-    }
-
-    for (const key of keys(state.zone)) {
-      const card = state.zone[key];
-      game.zones[key] = Zone.fromJson(game, card, state.card);
-    }
-
-    game.nextId = state.nextId;
-
-    return game;
-  }
-
-  toJson(): GameState {
+  toJSON(): any {
     return {
       nextId: this.nextId,
-      card: mapValues(this.card, (card) => card.toJson()),
-      player: mapValues(this.player, (player) => player.toJson()),
-      zone: mapValues(this.zones, (zone) => zone.toJson()),
+      players: values(this.player).map((p) => p.toJSON()),
+      zones: values(this.zone).map((z) => z.toJSON()),
+      cards: values(this.card).map((c) => c.toJSON()),
+      effects: this.effects.map(stringify),
     };
   }
 
-  constructor(public agent: Agent) {
-    super(0, 'game');
+  constructor(public repo: CardsRepo, setup: GameSetupData) {
+    if (setup.type === 'scenario') {
+      this.prepareScenario(setup.data.scenario, setup.data.difficulty);
+      for (const playerDeck of setup.data.players) {
+        this.addPlayer(playerDeck);
+      }
+    } else {
+      this.nextId = setup.data.nextId;
+
+      for (const player of setup.data.players) {
+        (this.player as any)[player.id as any] = new Player(this, player.id);
+      }
+
+      for (const card of setup.data.cards) {
+        this.card[card.id] = new Card(this, card.id, card.ref, card.up);
+        this.card[card.id].token = card.token;
+      }
+
+      for (const zone of setup.data.zones) {
+        const newZone = new Zone(this, zone.id, zone.type);
+
+        if (zone.owner) {
+          newZone.owner = (this.player as any)[zone.owner as any];
+        }
+
+        for (const cardId of zone.cards) {
+          newZone.cards.push(this.card[cardId]);
+        }
+
+        this.zone[zone.id] = newZone;
+      }
+
+      for (const effect of setup.data.effects) {
+        this.effects.push(eval(effect));
+      }
+    }
+
+    this.recalculate();
+  }
+
+  private addPlayer(deck: PlayerDeck) {
+    const id = !this.player[0]
+      ? '0'
+      : !this.player[1]
+      ? '1'
+      : !this.player[2]
+      ? '2'
+      : '3';
+
+    const player = new Player(this, id);
+    this.player[id] = player;
+
+    this.addZone('library', player).addCards(deck.library, 'back');
+    this.addZone('hand', player);
+    this.addZone('playerArea', player).addCards(deck.heroes, 'front');
+    this.addZone('engaged', player);
+    this.addZone('discardPile', player);
+  }
+
+  private addZone(type: GameZoneType): Zone;
+  private addZone(type: PlayerZoneType, owner: Player): Zone;
+  private addZone(type: ZoneType, owner?: Player): Zone {
+    const id = this.nextId++;
+    const zone = new Zone(this, id, type as any, owner as any);
+    this.zone[id] = zone;
+    return zone;
+  }
+
+  private prepareScenario(scenario: Scenario, difficulty: Difficulty) {
+    this.addZone('activeLocation');
+    this.addZone('discardPile');
+    this.addZone('encounterDeck').addCards(
+      scenario.sets.flatMap((s) =>
+        difficulty === 'easy' ? s.easy : [...s.easy, ...s.normal]
+      ),
+      'back'
+    );
+    this.addZone('questDeck').addCards(scenario.quest, 'back');
+    this.addZone('questArea');
+    this.addZone('removed');
+    this.addZone('stagingArea');
+    this.addZone('victoryDisplay');
+  }
+
+  addCard(ref: CardRef, up: Side) {
+    const id = this.nextId++;
+    const card = new Card(this, id, ref, up);
+    this.card[id] = card;
+    return card;
   }
 
   get cards() {
@@ -65,47 +136,41 @@ export class Game extends Entity<'game'> {
     return values(this.player);
   }
 
-  addPlayer(deck: PlayerDeck) {
-    const id = Object.keys(this.player).length.toString() as PlayerId;
-    const player = new Player(this, id);
-    this.player[id] = player;
-    for (const hero of deck.heroes) {
-      player.zone.playerArea.addCard(this, hero);
-    }
-
-    for (const definition of deck.library) {
-      player.zone.library.addCard(this, definition);
-    }
+  get zones() {
+    return values(this.zone);
   }
 
-  setupScenario(scenario: Scenario, difficulty: Difficulty) {
-    for (const definition of scenario.quest) {
-      this.zones.questDeck.addCard(this, definition);
-    }
-
-    const cards =
-      difficulty === 'easy'
-        ? scenario.sets.flatMap((e) => (e.easy ? e.easy : []))
-        : scenario.sets.flatMap((e) => [...e.easy, ...e.normal]);
-
-    for (const definition of cards) {
-      this.zones.encounterDeck.addCard(this, definition);
-    }
+  getZone(type: GameZoneType) {
+    return this.zones.find((z) => z.type === type && !z.owner)!;
   }
 
-  start() {
-    this.zones.encounterDeck.shuffle();
-    this.players.forEach((p) => p.zone.library.shuffle());
-    this.players.forEach((p) => p.draw(6));
-    this.cards
-      .filter((c) => c.definition.front.type === 'hero')
-      .forEach((c) => c.generateResources(1));
-    this.zones.questDeck.topCard.move(this.zones.questArea);
-    // // // TODO setup
-    this.round();
-  }
+  recalculate() {
+    for (const card of this.cards) {
+      card.modifiers = [];
+      card.props = cloneDeep(
+        card.up === 'front' ? card.def.front : card.def.back
+      );
+    }
 
-  round() {
-    // TODO
+    const effects: Effect[] = [];
+
+    for (const card of this.cards) {
+      for (const ability of card.props.abilities) {
+        effects.push(ability.code(card));
+      }
+    }
+
+    for (const effect of [...effects, ...this.effects]) {
+      const targets =
+        effect.target instanceof Card
+          ? [effect.target]
+          : this.cards.filter(effect.target);
+
+      for (const card of targets) {
+        const modify = effect.modifier(card);
+        card.modifiers.push(modify);
+        modify(card.props);
+      }
+    }
   }
 }

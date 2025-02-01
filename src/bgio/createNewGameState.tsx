@@ -2,34 +2,34 @@ import { core, decks } from '@card-engine-lisp/cards';
 import {
   State,
   Game,
-  StaticAgent,
   PlayerDeck,
   Scenario,
-  toInstructions,
+  CardsRepo,
+  Interpreter,
 } from '@card-engine-lisp/engine';
 import { NewGameParams } from './../game/types';
 
-export function createNewGameState(setup: NewGameParams): State {
-  const game = new Game(new StaticAgent([]));
+export function createNewGameState(
+  setup: NewGameParams,
+  repo: CardsRepo
+): State {
+  const scenario = core.scenario[setup.scenario] as Scenario;
 
   const players = setup.players
     .filter((p, i) => i < Number(setup.playerCount))
     .map((key) => decks[key]) as PlayerDeck[];
 
-  const scenario = core.scenario[setup.scenario] as Scenario;
+  const game = new Game(repo, {
+    type: 'scenario',
+    data: {
+      extra: setup.extra,
+      difficulty: setup.difficulty,
+      scenario: scenario,
+      players,
+    },
+  });
 
-  for (const player of players) {
-    game.addPlayer(player);
-  }
+  const interpreter = new Interpreter([], game, false);
 
-  game.setupScenario(scenario, setup.difficulty);
-
-  const state: State = {
-    game: game.toJson(),
-    stack: [],
-    frames: [{}],
-    instructions: toInstructions(`game.start()`),
-  };
-
-  return state;
+  return interpreter.toJSON();
 }

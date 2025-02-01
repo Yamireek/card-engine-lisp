@@ -10,6 +10,7 @@ import * as scenario from './scenarios';
 import * as set from './sets';
 
 export * as decks from './decks/index';
+export * from './repo';
 
 export const core = {
   ally,

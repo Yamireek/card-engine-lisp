@@ -11,6 +11,7 @@ import { DetailProvider } from './../game/DetailContext';
 import { GameDisplay } from './../game/GameDisplay';
 import patch from 'fast-json-patch';
 import { InterpreterDialogs } from './../interpreter/InterpreterDialogs';
+import { cards } from '@card-engine-lisp/cards';
 
 export type LotrLCGProps = BoardProps<State>;
 
@@ -19,7 +20,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
   const navigate = useNavigate();
 
   const interpreter = useMemo(
-    () => Interpreter.fromJson(props.G, new InterpretedAgent()),
+    () => Interpreter.fromJson(props.G, cards),
     [props.G]
   );
 
@@ -73,7 +74,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
           onClick={() => {
             console.time();
             interpreter.run();
-            const newState = interpreter.toJson();
+            const newState = interpreter.toJSON();
             const changes = patch.compare(props.G, newState);
             console.log('changes', changes);
             props.moves.patch(changes);
@@ -88,7 +89,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
             console.time();
             interpreter.choose(choice);
             interpreter.run();
-            const newState = interpreter.toJson();
+            const newState = interpreter.toJSON();
             const changes = patch.compare(props.G, newState);
             console.log('changes', changes);
             props.moves.patch(changes);
