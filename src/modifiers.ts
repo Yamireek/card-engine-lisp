@@ -17,7 +17,6 @@ import {
 } from '@card-engine-lisp/engine';
 
 export type CardDefinition = {
-  ref: CardRef;
   front: CardProps;
   back: CardProps;
   orientation: Orientation;
@@ -134,12 +133,7 @@ export class Game {
       }
 
       for (const card of setup.data.cards) {
-        this.card[card.id] = new Card(
-          this,
-          card.id,
-          cards.get(card.def),
-          card.up
-        );
+        this.card[card.id] = new Card(this, card.id, card.ref, card.up);
         this.card[card.id].token = card.token;
       }
 
@@ -196,7 +190,7 @@ export class Game {
 
   addCard(ref: CardRef, up: Side) {
     const id = this.nextId++;
-    const card = new Card(this, id, this.repo.get(ref), up);
+    const card = new Card(this, id, ref, up);
     this.card[id] = card;
     return card;
   }
@@ -245,6 +239,7 @@ export class Game {
 }
 
 export class Card {
+  public def: CardDefinition;
   public props: CardProps;
 
   public modifiers: Modifier[] = [];
@@ -254,7 +249,7 @@ export class Card {
   toJSON(): any {
     return {
       id: this.id,
-      def: this.def.ref,
+      def: this.ref,
       up: this.up,
       token: this.token,
     };
@@ -263,10 +258,11 @@ export class Card {
   constructor(
     public game: Game,
     public id: CardId,
-    public def: CardDefinition,
+    public ref: CardRef,
     public up: Side
   ) {
-    this.props = cloneDeep(up === 'front' ? def.front : def.back);
+    this.def = this.game.repo.get(ref);
+    this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
   }
 
   dealDamage(amount: number) {
