@@ -8,7 +8,10 @@ import {
   Scenario,
 } from '../state/GameSetupData';
 import {
+  Action,
   Difficulty,
+  EntityAction,
+  EntityFilter,
   GameState,
   GameZoneType,
   PlayerZoneType,
@@ -178,16 +181,54 @@ export class Game {
     }
 
     for (const effect of [...effects, ...this.effects]) {
-      const targets =
-        effect.target instanceof Card
-          ? [effect.target]
-          : this.cards.filter(effect.target);
+      const targets = this.filterCards(effect.target);
 
       for (const card of targets) {
         const modify = effect.modifier(card);
         card.modifiers.push(modify);
         modify(card.props);
       }
+    }
+  }
+
+  exe(action: Action) {
+    const type = action[0];
+    switch (type) {
+      case 'CARD': {
+        const [, filter, operation] = action;
+        const targets = this.filterCards(filter);
+        for (const target of targets) {
+          this.exeOnCard(target, operation);
+        }
+      }
+    }
+
+    this.recalculate();
+  }
+
+  exeOnCard(card: Card, action: EntityAction<Card>) {
+    const type = action[0];
+    switch (type) {
+      case 'CALL': {
+        const [, name, ...args] = action;
+        const method = (card as any)[name as any](...args);
+        if (typeof method.body === 'function') {
+          method.body();
+        } else {
+          this.exeOnCard(card, method.body);
+        }
+      }
+    }
+  }
+
+  filterCards(filter: EntityFilter<'card', Card>) {
+    if (filter === 'ALL') {
+      return this.cards;
+    }
+    if (typeof filter === 'number') {
+      return [this.card[filter]];
+    } else {
+      return this.cards.filter(filter);
     }
   }
 }

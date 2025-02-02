@@ -29,11 +29,9 @@ it('Gimli', () => {
 
   const gimli = game.getCard('Gimli');
   expect(gimli.props.attack).toEqual(2);
-  gimli.addToken(1, 'damage');
-  game.recalculate();
+  game.exe(['CARD', gimli.id, ['CALL', 'dealDamage', 1]]);
   expect(gimli.props.attack).toEqual(3);
-  gimli.removeToken(1, 'damage');
-  game.recalculate();
+  game.exe(['CARD', gimli.id, ['CALL', 'heal', 1]]);
   expect(gimli.props.attack).toEqual(2);
 });
 

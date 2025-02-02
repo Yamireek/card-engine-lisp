@@ -5,10 +5,11 @@ import {
   CardProps,
   CardRef,
   CardState,
+  EntityMethod,
   Modifier,
   Side,
 } from '../state';
-import { cloneDeep, max } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 export class Card {
   public def: CardDefinition;
@@ -37,14 +38,24 @@ export class Card {
     this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
   }
 
-  addToken(amount: number, token: Token) {
-    this.token[token] += amount;
-    return true;
-  }
+  addToken: EntityMethod<Card, [number, Token]> = (amount, type) => ({
+    body: () => {
+      this.token[type] += amount;
+    },
+  });
 
-  removeToken(amount: number, token: Token) {
-    const removed = max([this.token[token], amount]) ?? 0;
-    this.token[token] -= removed;
-    return removed > 0;
-  }
+  removeToken: EntityMethod<Card, [number, Token]> = (amount, type) => ({
+    body: () => {
+      this.token[type] = Math.max(0, this.token[type] - amount);
+    },
+  });
+
+  heal: EntityMethod<Card, [number]> = (amount) => ({
+    isAllowed: () => this.token.damage > 0,
+    body: ['CALL', 'removeToken', amount, 'damage'],
+  });
+
+  dealDamage: EntityMethod<Card, [number]> = (amount) => ({
+    body: ['CALL', 'addToken', amount, 'damage'],
+  });
 }

@@ -18,7 +18,7 @@ export const gimli = cards.add(
       code: (self) => {
         return {
           type: 'card',
-          target: self,
+          target: self.id,
           modifier: (card) => (p) => {
             if (p.attack !== undefined) {
               p.attack += card.token.damage;
