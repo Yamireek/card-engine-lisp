@@ -200,6 +200,10 @@ export class Game {
         for (const target of targets) {
           this.exeOnCard(target, operation);
         }
+        break;
+      }
+      case 'CHOOSE': {
+        // TODO
       }
     }
 
@@ -217,6 +221,18 @@ export class Game {
         } else {
           this.exeOnCard(card, method.body);
         }
+        break;
+      }
+      case 'SEQ': {
+        const [, ...actions] = action;
+        for (const action of actions) {
+          this.exeOnCard(card, action);
+        }
+        break;
+      }
+      case 'GAME': {
+        const [, a] = action;
+        this.exe(a as any);
       }
     }
   }
@@ -224,9 +240,10 @@ export class Game {
   filterCards(filter: EntityFilter<'card', Card>) {
     if (filter === 'ALL') {
       return this.cards;
-    }
-    if (typeof filter === 'number') {
+    } else if (typeof filter === 'number') {
       return [this.card[filter]];
+    } else if (typeof filter === 'string') {
+      throw new Error('incorret card filter');
     } else {
       return this.cards.filter(filter);
     }

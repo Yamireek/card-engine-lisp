@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GameState } from '.';
-import { Card, Game, Player, Zone } from '../entity';
+import { Card, Game, Player, PlayerId, Zone } from '../entity';
 import { Flavor } from '../types';
 import { Difficulty, Orientation } from './enums';
 import { PrintedProps } from './PrintedProps';
@@ -14,7 +14,7 @@ export type Ability = {
 
 export type EntityFilter<N, T> =
   | 'ALL'
-  | Flavor<number, N>
+  | Flavor<number | string, N>
   | ((entity: T) => boolean);
 
 export type MethodNames<E> = {
@@ -39,13 +39,33 @@ export type EntityAction<T> =
   | ['SEQ', ...EntityAction<T>[]]
   | Action;
 
-export type DefineMethod<E> = ['METHOD', (entity: E) => boolean];
+export type ChoiceOptions = {
+  player: PlayerId;
+  label: string;
+  min?: number;
+  max?: number;
+};
 
 export type Action =
   | ['GAME', EntityAction<Game>]
   | ['ZONE', EntityAction<Zone>]
   | ['PLAYER', EntityAction<Player>]
-  | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>];
+  | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
+  | [
+      'CHOOSE',
+      'CARD',
+      EntityFilter<'card', Card>,
+      ChoiceOptions,
+      EntityAction<Card>
+    ]
+  | [
+      'CHOOSE',
+      'PLAYER',
+      EntityFilter<'player', Player>,
+      ChoiceOptions,
+      EntityAction<Player>
+    ]
+  | ['CHOOSE', 'ACTION', ChoiceOptions, Array<[string, Action]>];
 
 export type Effect = {
   type: 'card';
