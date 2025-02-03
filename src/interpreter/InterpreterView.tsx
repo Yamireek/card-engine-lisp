@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import {
   Game,
-  Interpreter,
+  Interpreter2,
   toCode,
   toInstructions,
 } from '@card-engine-lisp/engine';
@@ -54,7 +54,7 @@ export const InterpreterView = observer(() => {
       },
     });
 
-    return new Interpreter(instructions, game, true);
+    return new Interpreter2(instructions, game, true);
   }, [instructions]);
 
   return (

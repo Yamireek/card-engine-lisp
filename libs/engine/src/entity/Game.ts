@@ -16,6 +16,7 @@ import {
   GameZoneType,
   PlayerZoneType,
   Side,
+  State,
   ZoneType,
 } from '../state';
 import { Player } from './Player';
@@ -24,6 +25,101 @@ import { Card } from './Card';
 import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
 import { cloneDeep } from 'lodash';
+
+export function cardAction(
+  target: EntityFilter<'card', Card>,
+  action: EntityAction<Card>
+): ['CARD', EntityFilter<'card', Card>, EntityAction<Card>] {
+  return ['CARD', target, action];
+}
+
+export class Interpreter2 {
+  public stack: Action[] = [];
+
+  toJSON(): State {
+    return {
+      game: this.game.toJSON(),
+      frames: [],
+      instructions: [],
+      stack: [],
+    };
+  }
+
+  constructor(public game: Game) {}
+
+  run(...actions: Action[]) {
+    this.stack.unshift(...actions);
+    while (true) {
+      const next = this.stack.shift();
+      if (next) {
+        const stop = this.exe(next);
+        if (stop) {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+  }
+
+  exe(action: Action): boolean {
+    const type = action[0];
+    switch (type) {
+      case 'CARD': {
+        const [, filter, operation] = action;
+        if (typeof filter === 'number') {
+          const card = this.game.card[filter];
+          return this.exeOnCard(card, operation);
+        } else {
+          const targets = this.game.filterCards(filter);
+          const ins = targets.map((t) => ['CARD', t.id, operation]);
+          this.stack.unshift(...(ins as any));
+          return false;
+        }
+      }
+      case 'CHOOSE': {
+        this.stack.unshift(action);
+        return true;
+      }
+      default: {
+        throw new Error('unknown action: ' + JSON.stringify(action));
+      }
+    }
+  }
+
+  exeOnCard(card: Card, action: EntityAction<Card>): boolean {
+    const type = action[0];
+    switch (type) {
+      case 'CALL': {
+        const [, name, ...args] = action;
+        const method = (card as any)[name as any](...args);
+        if (typeof method.body === 'function') {
+          console.log('update', card.props.name, name, ...args);
+          method.body();
+          return false;
+        } else {
+          if (!method.isAllowed || method.isAllowed()) {
+            return this.exeOnCard(card, method.body);
+          } else {
+            return false;
+          }
+        }
+      }
+      case 'SEQ': {
+        const [, ...actions] = action;
+        this.stack.unshift(...actions.map((a) => cardAction(card.id, a)));
+        return false;
+      }
+      case 'GAME': {
+        const [, a] = action;
+        return this.exe(a as any);
+      }
+      default: {
+        throw new Error('uknown action: ' + JSON.stringify(action));
+      }
+    }
+  }
+}
 
 export class Game {
   public nextId = 1;

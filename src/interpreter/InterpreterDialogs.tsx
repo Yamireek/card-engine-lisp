@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Interpreter, Value } from '@card-engine-lisp/engine';
+import { Interpreter2, Value } from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
 import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';
 
 export const InterpreterDialogs = observer(
   (props: {
-    interpreter: Interpreter;
+    interpreter: Interpreter2;
     onChoice: (v: Value | Value[]) => void;
   }) => {
     const choice = props.interpreter.choice;

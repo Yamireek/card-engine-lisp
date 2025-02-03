@@ -1,4 +1,4 @@
-import { Interpreter, State } from '@card-engine-lisp/engine';
+import { Interpreter2, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import { useEffect, useMemo } from 'react';
 import { LobbyClient } from 'boardgame.io/client';
@@ -20,7 +20,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
   const navigate = useNavigate();
 
   const interpreter = useMemo(
-    () => Interpreter.fromJson(props.G, cards),
+    () => Interpreter2.fromJson(props.G, cards),
     [props.G]
   );
 

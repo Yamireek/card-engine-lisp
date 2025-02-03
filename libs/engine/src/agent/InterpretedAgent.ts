@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Agent } from './Agent';
-
+import { Agent, ChooseItemsParams } from './Agent';
 
 export class InterpretedAgent extends Agent {
-  override chooseNumber(min: number, max: number): number {
+  chooseItems<T>(params: ChooseItemsParams<T>): T[] {
     throw new Error('Method not implemented.');
   }
 }
