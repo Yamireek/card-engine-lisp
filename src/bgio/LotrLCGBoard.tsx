@@ -1,4 +1,4 @@
-import { Interpreter2, State } from '@card-engine-lisp/engine';
+import { Card, Game, Interpreter2, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import { useEffect, useMemo } from 'react';
 import { LobbyClient } from 'boardgame.io/client';
@@ -19,10 +19,24 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
   const settings = useSettings();
   const navigate = useNavigate();
 
-  const interpreter = useMemo(
-    () => Interpreter2.fromJson(props.G, cards),
-    [props.G]
-  );
+  const interpreter = useMemo(() => {
+    const game = new Game(cards, {
+      type: 'json',
+      data: props.G.game,
+    });
+    const int = new Interpreter2(game);
+    int.exe([
+      'CHOOSE',
+      'CARD',
+      {
+        label: 'Choose card',
+        player: '0',
+        filter: (c: Card) => c.props.type === 'hero',
+        action: ['CALL', 'dealDamage', 1],
+      },
+    ]);
+    return int;
+  }, [props.G]);
 
   useEffect(() => {
     const value = localStorage.getItem('saved_state');
@@ -70,24 +84,10 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
       }}
     >
       <DetailProvider>
-        <button
-          onClick={() => {
-            console.time();
-            interpreter.run();
-            const newState = interpreter.toJSON();
-            const changes = patch.compare(props.G, newState);
-            console.log('changes', changes);
-            props.moves.patch(changes);
-            console.timeEnd();
-          }}
-        >
-          run
-        </button>
         <InterpreterDialogs
           interpreter={interpreter}
-          onChoice={(choice) => {
+          onSubmit={() => {
             console.time();
-            interpreter.choose(choice);
             interpreter.run();
             const newState = interpreter.toJSON();
             const changes = patch.compare(props.G, newState);

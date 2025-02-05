@@ -29,7 +29,7 @@ export function createNewGameState(
     },
   });
 
-  const interpreter = new Interpreter2([], game, false);
+  const interpreter = new Interpreter2(game);
 
   return interpreter.toJSON();
 }

@@ -15,6 +15,7 @@ export type Ability = {
 export type EntityFilter<N, T> =
   | 'ALL'
   | Flavor<number | string, N>
+  | Array<number | string>
   | ((entity: T) => boolean);
 
 export type MethodNames<E> = {
@@ -46,26 +47,28 @@ export type ChoiceOptions = {
   max?: number;
 };
 
+export type CardChoiceOptions = ChoiceOptions & {
+  filter: EntityFilter<'card', Card>;
+  action: EntityAction<Card>;
+};
+
+export type PlayerChoiceOptions = ChoiceOptions & {
+  filter: EntityFilter<'player', Player>;
+  action: EntityAction<Player>;
+};
+
+export type ActionChoiceOptions = ChoiceOptions & {
+  options: Array<[string, Action]>;
+};
+
 export type Action =
   | ['GAME', EntityAction<Game>]
   | ['ZONE', EntityAction<Zone>]
   | ['PLAYER', EntityAction<Player>]
   | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
-  | [
-      'CHOOSE',
-      'CARD',
-      EntityFilter<'card', Card>,
-      ChoiceOptions,
-      EntityAction<Card>
-    ]
-  | [
-      'CHOOSE',
-      'PLAYER',
-      EntityFilter<'player', Player>,
-      ChoiceOptions,
-      EntityAction<Player>
-    ]
-  | ['CHOOSE', 'ACTION', ChoiceOptions, Array<[string, Action]>];
+  | ['CHOOSE', 'CARD', CardChoiceOptions]
+  | ['CHOOSE', 'PLAYER', PlayerChoiceOptions]
+  | ['CHOOSE', 'ACTION', ActionChoiceOptions];
 
 export type Effect = {
   type: 'card';

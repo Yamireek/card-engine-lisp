@@ -24,7 +24,7 @@ import { Zone } from './Zone';
 import { Card } from './Card';
 import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isArray } from 'lodash';
 
 export function cardAction(
   target: EntityFilter<'card', Card>,
@@ -47,16 +47,20 @@ export class Interpreter2 {
 
   constructor(public game: Game) {}
 
+  step() {
+    const next = this.stack.shift();
+    if (next) {
+      return this.exe(next);
+    } else {
+      return true;
+    }
+  }
+
   run(...actions: Action[]) {
     this.stack.unshift(...actions);
     while (true) {
-      const next = this.stack.shift();
-      if (next) {
-        const stop = this.exe(next);
-        if (stop) {
-          break;
-        }
-      } else {
+      const stop = this.step();
+      if (stop) {
         break;
       }
     }
@@ -155,7 +159,7 @@ export class Game {
 
       for (const card of state.cards) {
         this.card[card.id] = new Card(this, card.id, card.ref, card.up);
-        this.card[card.id].token = card.token;
+        this.card[card.id].token = cloneDeep(card.token);
       }
 
       for (const zone of state.zones) {
@@ -333,6 +337,28 @@ export class Game {
     }
   }
 
+  canCardExe(card: Card, action: EntityAction<Card>): boolean {
+    const type = action[0];
+    switch (type) {
+      case 'CALL': {
+        const [, name, ...args] = action;
+        const method = (card as any)[name as any](...args);
+        if (typeof method.body === 'function') {
+          return true;
+        } else {
+          return method.isAllowed ? method.isAllowed() : true;
+        }
+      }
+      case 'SEQ': {
+        const [, ...actions] = action;
+        return actions.every((a) => this.canCardExe(card, a));
+      }
+      default: {
+        throw new Error('not implemented');
+      }
+    }
+  }
+
   filterCards(filter: EntityFilter<'card', Card>) {
     if (filter === 'ALL') {
       return this.cards;
@@ -340,6 +366,8 @@ export class Game {
       return [this.card[filter]];
     } else if (typeof filter === 'string') {
       throw new Error('incorret card filter');
+    } else if (isArray(filter)) {
+      return this.cards.filter((c) => filter.includes(c.id));
     } else {
       return this.cards.filter(filter);
     }

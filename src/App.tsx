@@ -9,7 +9,6 @@ import { MenuPage } from './MenuPage';
 import { LobbyPage } from './bgio/LobbyPage';
 import { GamePage } from './game/GamePage';
 import { SingleSetupPage } from './game/SingleSetupPage';
-import { InterpreterView } from './interpreter/InterpreterView';
 
 export const App = () => {
   const router = useMemo(
@@ -34,7 +33,6 @@ export const App = () => {
         { path: '/lobby', element: <LobbyPage /> },
         { path: '/game', element: <GamePage /> },
         { path: '/settings', element: <SettingsPage /> },
-        { path: '/debug', element: <InterpreterView /> },
       ]),
     []
   );

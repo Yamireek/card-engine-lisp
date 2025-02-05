@@ -1,36 +1,43 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Interpreter2, Value } from '@card-engine-lisp/engine';
+ 
+import { Interpreter2 } from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
 import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';
 
 export const InterpreterDialogs = observer(
-  (props: {
-    interpreter: Interpreter2;
-    onChoice: (v: Value | Value[]) => void;
-  }) => {
-    const choice = props.interpreter.choice;
+  (props: { interpreter: Interpreter2; onSubmit: () => void }) => {
+    const nextAction = props.interpreter.stack[0];
 
-    if (!choice) {
+    if (!nextAction || nextAction[0] !== 'CHOOSE') {
       return null;
     }
 
-    return (
-      <ChooseOptionDialog<Value>
-        title={choice.title}
-        min={choice.min}
-        max={choice.max}
-        choices={choice.options.map((o: any) => ({
-          id: o.value,
-          title: o.label,
-        }))}
-        onSubmit={(values) => {
-          if (choice.max === 1) {
-            props.onChoice(values[0]);
-          } else {
-            props.onChoice(values);
-          }
-        }}
-      />
-    );
+    const [, type] = nextAction;
+
+    if (type === 'CARD') {
+      const [, , options] = nextAction;
+
+      const cards = props.interpreter.game
+        .filterCards(options.filter)
+        .filter((c) => props.interpreter.game.canCardExe(c, options.action));
+
+      return (
+        <ChooseOptionDialog
+          title={options.label}
+          min={options.min}
+          max={options.max}
+          choices={cards.map((card) => ({
+            id: card.id,
+            title: card.props.name ?? '',
+          }))}
+          onSubmit={(values) => {
+            props.interpreter.stack.shift();
+            props.interpreter.stack.unshift(['CARD', values, options.action]);
+            props.onSubmit();
+          }}
+        />
+      );
+    } else {
+      return null;
+    }
   }
 );
