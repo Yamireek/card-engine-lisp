@@ -6,6 +6,7 @@ import {
   Scenario,
   CardsRepo,
   Interpreter2,
+  Card,
 } from '@card-engine-lisp/engine';
 import { NewGameParams } from './../game/types';
 
@@ -29,7 +30,8 @@ export function createNewGameState(
     },
   });
 
-  const interpreter = new Interpreter2(game);
+  const int = new Interpreter2(game);
+  int.stack.push(game.begin());
 
-  return interpreter.toJSON();
+  return int.toJSON();
 }

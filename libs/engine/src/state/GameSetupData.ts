@@ -40,35 +40,41 @@ export type EntityAction<T> =
   | ['SEQ', ...EntityAction<T>[]]
   | Action;
 
-export type ChoiceOptions = {
+export type BaseChoiceOptions = {
   player: PlayerId;
   label: string;
   min?: number;
   max?: number;
 };
 
-export type CardChoiceOptions = ChoiceOptions & {
+export type CardChoiceOptions = BaseChoiceOptions & {
+  type: 'card';
   filter: EntityFilter<'card', Card>;
   action: EntityAction<Card>;
 };
 
-export type PlayerChoiceOptions = ChoiceOptions & {
+export type PlayerChoiceOptions = BaseChoiceOptions & {
+  type: 'player';
   filter: EntityFilter<'player', Player>;
   action: EntityAction<Player>;
 };
 
-export type ActionChoiceOptions = ChoiceOptions & {
+export type ActionChoiceOptions = BaseChoiceOptions & {
+  type: 'action';
   options: Array<[string, Action]>;
 };
+
+export type ChoiceOptions =
+  | ActionChoiceOptions
+  | PlayerChoiceOptions
+  | CardChoiceOptions;
 
 export type Action =
   | ['GAME', EntityAction<Game>]
   | ['ZONE', EntityAction<Zone>]
   | ['PLAYER', EntityAction<Player>]
   | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
-  | ['CHOOSE', 'CARD', CardChoiceOptions]
-  | ['CHOOSE', 'PLAYER', PlayerChoiceOptions]
-  | ['CHOOSE', 'ACTION', ActionChoiceOptions];
+  | ['CHOOSE', ChoiceOptions];
 
 export type Effect = {
   type: 'card';

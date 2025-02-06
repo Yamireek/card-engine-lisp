@@ -1,4 +1,5 @@
-import { Card, Game, Interpreter2, State } from '@card-engine-lisp/engine';
+/* eslint-disable no-eval */
+import { Game, Interpreter2, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import { useEffect, useMemo } from 'react';
 import { LobbyClient } from 'boardgame.io/client';
@@ -25,16 +26,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
       data: props.G.game,
     });
     const int = new Interpreter2(game);
-    int.exe([
-      'CHOOSE',
-      'CARD',
-      {
-        label: 'Choose card',
-        player: '0',
-        filter: (c: Card) => c.props.type === 'hero',
-        action: ['CALL', 'dealDamage', 1],
-      },
-    ]);
+    int.stack = props.G.stack.map((s) => eval(s));
     return int;
   }, [props.G]);
 

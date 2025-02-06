@@ -1,4 +1,3 @@
- 
 import { Interpreter2 } from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
 import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';
@@ -11,11 +10,9 @@ export const InterpreterDialogs = observer(
       return null;
     }
 
-    const [, type] = nextAction;
+    const [, options] = nextAction;
 
-    if (type === 'CARD') {
-      const [, , options] = nextAction;
-
+    if (options.type === 'card') {
       const cards = props.interpreter.game
         .filterCards(options.filter)
         .filter((c) => props.interpreter.game.canCardExe(c, options.action));

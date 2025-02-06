@@ -1,13 +1,10 @@
 import { CardId, PlayerId, Tokens, ZoneId } from '../entity/types';
-import { Env, Instruction, Value } from '../types';
 import { Side, ZoneType } from './enums';
 import { CardRef } from './GameSetupData';
 
 export type State = {
   game: GameState;
-  stack: Value[];
-  frames: Env[];
-  instructions: Instruction[];
+  stack: string[];
 };
 
 export type CardState = {

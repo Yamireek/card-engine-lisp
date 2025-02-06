@@ -39,9 +39,7 @@ export class Interpreter2 {
   toJSON(): State {
     return {
       game: this.game.toJSON(),
-      frames: [],
-      instructions: [],
-      stack: [],
+      stack: this.stack.map((s) => stringify(s)),
     };
   }
 
@@ -371,5 +369,18 @@ export class Game {
     } else {
       return this.cards.filter(filter);
     }
+  }
+
+  begin(): Action {
+    return [
+      'CHOOSE',
+      {
+        label: 'Choose hero',
+        type: 'card',
+        filter: (c) => c.props.type === 'hero',
+        action: ['CALL', 'dealDamage', 1],
+        player: '0',
+      },
+    ];
   }
 }
