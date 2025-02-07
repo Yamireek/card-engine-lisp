@@ -259,7 +259,7 @@ export class Game {
       case 'CARD':
         return this.card[id as any];
       case 'PLAYER':
-        return this.player[id as any];
+        return (this.player as any)[id as any];
       case 'ZONE':
         return this.zone[id as any];
       default:

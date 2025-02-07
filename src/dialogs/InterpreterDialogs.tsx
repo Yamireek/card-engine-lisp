@@ -1,9 +1,9 @@
-import { Interpreter2 } from '@card-engine-lisp/engine';
+import { Interpreter } from '@card-engine-lisp/engine';
 import { observer } from 'mobx-react-lite';
-import { ChooseOptionDialog } from '../dialogs/ChooseOptionDialog';
+import { ChooseOptionDialog } from './ChooseOptionDialog';
 
 export const InterpreterDialogs = observer(
-  (props: { interpreter: Interpreter2; onSubmit: () => void }) => {
+  (props: { interpreter: Interpreter; onSubmit: () => void }) => {
     const nextAction = props.interpreter.stack[0];
 
     if (!nextAction || nextAction[0] !== 'CHOOSE') {
@@ -14,7 +14,8 @@ export const InterpreterDialogs = observer(
 
     if (options.type === 'card') {
       const cards = props.interpreter.game
-        .filterCards(options.filter)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter('CARD', options.filter as any)
         .filter((c) => props.interpreter.game.canCardExe(c, options.action));
 
       return (

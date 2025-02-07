@@ -1,5 +1,5 @@
 /* eslint-disable no-eval */
-import { Game, Interpreter2, State } from '@card-engine-lisp/engine';
+import { Game, Interpreter, State } from '@card-engine-lisp/engine';
 import { BoardProps } from 'boardgame.io/react';
 import { useEffect, useMemo } from 'react';
 import { LobbyClient } from 'boardgame.io/client';
@@ -11,7 +11,7 @@ import { StateContext } from './../game/StateContext';
 import { DetailProvider } from './../game/DetailContext';
 import { GameDisplay } from './../game/GameDisplay';
 import patch from 'fast-json-patch';
-import { InterpreterDialogs } from './../interpreter/InterpreterDialogs';
+import { InterpreterDialogs } from '../dialogs/InterpreterDialogs';
 import { cards } from '@card-engine-lisp/cards';
 
 export type LotrLCGProps = BoardProps<State>;
@@ -25,7 +25,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
       type: 'json',
       data: props.G.game,
     });
-    const int = new Interpreter2(game);
+    const int = new Interpreter(game);
     int.stack = props.G.stack.map((s) => eval(s));
     return int;
   }, [props.G]);

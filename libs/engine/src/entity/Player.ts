@@ -2,7 +2,7 @@ import { PlayerId } from './types';
 import { Game } from './Game';
 import { PlayerState } from '../state/State';
 import { Zone } from './Zone';
-import { EntityAction, EntityMethod, PlayerZoneType } from '../state';
+import { EntityMethod, PlayerZoneType } from '../state';
 
 export class Player {
   public zones: Zone[] = [];

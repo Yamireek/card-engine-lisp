@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Action, State, EntityAction } from '../state';
 import { stringify } from '../utils';
 import { Game, Types } from './Game';
 
-export class Interpreter2 {
+export class Interpreter {
   public stack: Action[] = [];
 
   toJSON(): State {
