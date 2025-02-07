@@ -16,7 +16,6 @@ import {
   GameZoneType,
   PlayerZoneType,
   Side,
-  State,
   ZoneType,
 } from '../state';
 import { Player } from './Player';
@@ -26,102 +25,15 @@ import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
 import { cloneDeep, isArray } from 'lodash';
 
-export function cardAction(
-  target: EntityFilter<'card', Card>,
-  action: EntityAction<Card>
-): ['CARD', EntityFilter<'card', Card>, EntityAction<Card>] {
-  return ['CARD', target, action];
-}
-
-export class Interpreter2 {
-  public stack: Action[] = [];
-
-  toJSON(): State {
-    return {
-      game: this.game.toJSON(),
-      stack: this.stack.map((s) => stringify(s)),
-    };
-  }
-
-  constructor(public game: Game) {}
-
-  step() {
-    const next = this.stack.shift();
-    if (next) {
-      return this.exe(next);
-    } else {
-      return true;
-    }
-  }
-
-  run(...actions: Action[]) {
-    this.stack.unshift(...actions);
-    while (true) {
-      const stop = this.step();
-      if (stop) {
-        break;
-      }
-    }
-  }
-
-  exe(action: Action): boolean {
-    const type = action[0];
-    switch (type) {
-      case 'CARD': {
-        const [, filter, operation] = action;
-        if (typeof filter === 'number') {
-          const card = this.game.card[filter];
-          return this.exeOnCard(card, operation);
-        } else {
-          const targets = this.game.filterCards(filter);
-          const ins = targets.map((t) => ['CARD', t.id, operation]);
-          this.stack.unshift(...(ins as any));
-          return false;
-        }
-      }
-      case 'CHOOSE': {
-        this.stack.unshift(action);
-        return true;
-      }
-      default: {
-        throw new Error('unknown action: ' + JSON.stringify(action));
-      }
-    }
-  }
-
-  exeOnCard(card: Card, action: EntityAction<Card>): boolean {
-    const type = action[0];
-    switch (type) {
-      case 'CALL': {
-        const [, name, ...args] = action;
-        const method = (card as any)[name as any](...args);
-        if (typeof method.body === 'function') {
-          console.log('update', card.props.name, name, ...args);
-          method.body();
-          return false;
-        } else {
-          if (!method.isAllowed || method.isAllowed()) {
-            return this.exeOnCard(card, method.body);
-          } else {
-            return false;
-          }
-        }
-      }
-      case 'SEQ': {
-        const [, ...actions] = action;
-        this.stack.unshift(...actions.map((a) => cardAction(card.id, a)));
-        return false;
-      }
-      case 'GAME': {
-        const [, a] = action;
-        return this.exe(a as any);
-      }
-      default: {
-        throw new Error('uknown action: ' + JSON.stringify(action));
-      }
-    }
-  }
-}
+export type Types = {
+  CARD: { id: CardId; entity: Card; filter: EntityFilter<'CARD', Card> };
+  PLAYER: {
+    id: PlayerId;
+    entity: Player;
+    filter: EntityFilter<'PLAYER', Player>;
+  };
+  ZONE: { id: ZoneId; entity: Zone; filter: EntityFilter<'ZONE', Zone> };
+};
 
 export class Game {
   public nextId = 1;
@@ -135,7 +47,9 @@ export class Game {
       nextId: this.nextId,
       players: values(this.player).map((p) => p.toJSON()),
       zones: values(this.zone).map((z) => z.toJSON()),
-      cards: values(this.card).map((c) => c.toJSON()),
+      cards: values(this.zone)
+        .flatMap((z) => z.cards)
+        .map((c) => c.toJSON()),
       effects: this.effects.map(stringify),
     };
   }
@@ -155,24 +69,23 @@ export class Game {
         (this.player as any)[player.id as any] = new Player(this, player.id);
       }
 
-      for (const card of state.cards) {
-        this.card[card.id] = new Card(this, card.id, card.ref, card.up);
-        this.card[card.id].token = cloneDeep(card.token);
-      }
-
-      for (const zone of state.zones) {
+      for (const zoneDto of state.zones) {
         const newZone = new Zone(
           this,
-          zone.id,
-          zone.type as any,
-          zone.owner ? (this.player as any)[zone.owner as any] : undefined
+          zoneDto.id,
+          zoneDto.type as any,
+          zoneDto.owner ? (this.player as any)[zoneDto.owner as any] : undefined
         );
 
-        for (const cardId of zone.cards) {
-          newZone.cards.push(this.card[cardId]);
-        }
+        this.zone[zoneDto.id] = newZone;
+      }
 
-        this.zone[zone.id] = newZone;
+      for (const data of state.cards) {
+        const zone = this.zone[data.zoneId];
+        const card = new Card(this, zone, data.id, data.ref, data.up);
+        card.token = cloneDeep(data.token);
+        zone.cards.push(card);
+        this.card[data.id] = card;
       }
 
       for (const effect of state.effects) {
@@ -227,9 +140,9 @@ export class Game {
     this.addZone('victoryDisplay');
   }
 
-  addCard(ref: CardRef, up: Side) {
+  addCard(zone: Zone, ref: CardRef, up: Side) {
     const id = this.nextId++;
-    const card = new Card(this, id, ref, up);
+    const card = new Card(this, zone, id, ref, up);
     this.card[id] = card;
     return card;
   }
@@ -279,58 +192,12 @@ export class Game {
     }
 
     for (const effect of [...effects, ...this.effects]) {
-      const targets = this.filterCards(effect.target);
+      const targets = this.filter('CARD', effect.target as any);
 
       for (const card of targets) {
         const modify = effect.modifier(card);
         card.modifiers.push(modify);
         modify(card.props);
-      }
-    }
-  }
-
-  exe(action: Action) {
-    const type = action[0];
-    switch (type) {
-      case 'CARD': {
-        const [, filter, operation] = action;
-        const targets = this.filterCards(filter);
-        for (const target of targets) {
-          this.exeOnCard(target, operation);
-        }
-        break;
-      }
-      case 'CHOOSE': {
-        // TODO
-      }
-    }
-
-    this.recalculate();
-  }
-
-  exeOnCard(card: Card, action: EntityAction<Card>) {
-    const type = action[0];
-    switch (type) {
-      case 'CALL': {
-        const [, name, ...args] = action;
-        const method = (card as any)[name as any](...args);
-        if (typeof method.body === 'function') {
-          method.body();
-        } else {
-          this.exeOnCard(card, method.body);
-        }
-        break;
-      }
-      case 'SEQ': {
-        const [, ...actions] = action;
-        for (const action of actions) {
-          this.exeOnCard(card, action);
-        }
-        break;
-      }
-      case 'GAME': {
-        const [, a] = action;
-        this.exe(a as any);
       }
     }
   }
@@ -357,30 +224,104 @@ export class Game {
     }
   }
 
-  filterCards(filter: EntityFilter<'card', Card>) {
+  filter<E extends keyof Types>(
+    type: E,
+    filter: Types[E]['filter']
+  ): Array<Types[E]['entity']> {
     if (filter === 'ALL') {
-      return this.cards;
-    } else if (typeof filter === 'number') {
-      return [this.card[filter]];
-    } else if (typeof filter === 'string') {
-      throw new Error('incorret card filter');
-    } else if (isArray(filter)) {
-      return this.cards.filter((c) => filter.includes(c.id));
-    } else {
-      return this.cards.filter(filter);
+      return this.getAll(type);
+    }
+
+    if (typeof filter === 'number') {
+      return [this.getOne(type, filter)];
+    }
+
+    if (type === 'PLAYER' && typeof filter === 'string') {
+      return [this.getOne(type, filter as any)];
+    }
+
+    if (isArray(filter)) {
+      return filter.map((id) => this.getOne(type, id as any));
+    }
+
+    if (typeof filter === 'function') {
+      return this.getAll(type).filter(filter as any);
+    }
+
+    throw new Error('unknown filter ' + JSON.stringify([type, filter]));
+  }
+
+  getOne<E extends keyof Types>(
+    type: E,
+    id: Types[E]['id']
+  ): Types[E]['entity'] {
+    switch (type) {
+      case 'CARD':
+        return this.card[id as any];
+      case 'PLAYER':
+        return this.player[id as any];
+      case 'ZONE':
+        return this.zone[id as any];
+      default:
+        throw new Error('unknown type ' + type);
+    }
+  }
+
+  getAll<E extends keyof Types>(type: E): Array<Types[E]['entity']> {
+    switch (type) {
+      case 'CARD':
+        return this.cards;
+      case 'PLAYER':
+        return this.players;
+      case 'ZONE':
+        return this.zones;
+      default:
+        throw new Error('unknown type ' + type);
     }
   }
 
   begin(): Action {
-    return [
-      'CHOOSE',
-      {
-        label: 'Choose hero',
-        type: 'card',
-        filter: (c) => c.props.type === 'hero',
-        action: ['CALL', 'dealDamage', 1],
-        player: '0',
+    // TODO
+
+    /*return [
+    ...data.players.map((d) => ({ addPlayer: d })),
+    {
+      setupScenario: { scenario: data.scenario, difficulty: data.difficulty },
+    },
+    'shuffleEncounterDeck',
+    {
+      player: 'each',
+      action: 'shuffleLibrary',
+    },
+    {
+      player: 'each',
+      action: {
+        draw: 6 + data.extra.cards,
       },
+    },
+    {
+      card: { type: 'hero' },
+      action: { generateResources: data.extra.resources },
+    },
+    {
+      card: { top: 'questDeck' },
+      action: {
+        move: {
+          from: 'questDeck',
+          to: 'questArea',
+        },
+      },
+    },
+    'setup',
+    gameRound(),*/
+
+    return [
+      'GAME',
+      [
+        'SEQ',
+        ['ZONE', this.players.map((p) => p.library.id), ['CALL', 'shuffle']],
+        ['PLAYER', 'ALL', ['CALL', 'draw', 6]],
+      ],
     ];
   }
 }

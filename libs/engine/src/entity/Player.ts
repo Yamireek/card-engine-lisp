@@ -2,7 +2,7 @@ import { PlayerId } from './types';
 import { Game } from './Game';
 import { PlayerState } from '../state/State';
 import { Zone } from './Zone';
-import { PlayerZoneType } from '../state';
+import { EntityAction, EntityMethod, PlayerZoneType } from '../state';
 
 export class Player {
   public zones: Zone[] = [];
@@ -22,4 +22,24 @@ export class Player {
     }
     return zone;
   }
+
+  get library() {
+    return this.getZone('library');
+  }
+
+  get hand() {
+    return this.getZone('hand');
+  }
+
+  draw: EntityMethod<Player, [number]> = (amount) => ({
+    isAllowed: () => this.library.cards.length > 0,
+    body: [
+      'GAME',
+      [
+        'CARD',
+        this.library.cards.slice(0, amount).map((c) => c.id),
+        ['CALL', 'moveTo', this.hand.id],
+      ],
+    ],
+  });
 }

@@ -9,6 +9,7 @@ export type State = {
 
 export type CardState = {
   id: CardId;
+  zoneId: ZoneId;
   ref: CardRef;
   up: Side;
   token: Tokens;

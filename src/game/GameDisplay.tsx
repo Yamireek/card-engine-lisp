@@ -10,6 +10,8 @@ import { Game } from '@card-engine-lisp/engine';
 import { uniq } from 'ramda';
 import { getCardImageUrls } from './utils';
 import { TexturesProvider } from './../images/textures';
+import { Stack } from '@mui/material';
+import { PlayerHand } from './PlayerHand';
 
 const staticUrls = [image.progress, image.resource, image.damage];
 
@@ -71,11 +73,11 @@ export const GameDisplay = () => {
           width: 'calc(100% - 200px)',
         }}
       >
-        {/* <Stack direction="row">
-            {keys(state.players).map((id) => (
-              <PlayerHand key={id} player={id} />
-            ))}
-          </Stack> */}
+        <Stack direction="row">
+          {ctx.game.players.map((p) => (
+            <PlayerHand key={p.id} player={p} />
+          ))}
+        </Stack>
       </div>
       {/* <GameDialogs /> */}
     </div>

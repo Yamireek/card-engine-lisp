@@ -1,8 +1,8 @@
 import { Flavor } from '../types';
 
-export type CardId = Flavor<number, 'card'>;
+export type CardId = Flavor<number, 'CARD'>;
 
-export type ZoneId = Flavor<number, 'zone'>;
+export type ZoneId = Flavor<number, 'ZONE'>;
 
 export type PlayerId = '0' | '1' | '2' | '3';
 

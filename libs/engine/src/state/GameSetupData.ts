@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GameState } from '.';
-import { Card, Game, Player, PlayerId, Zone } from '../entity';
+import { Card, Game, Player, PlayerId, Zone, ZoneId } from '../entity';
 import { Flavor } from '../types';
 import { Difficulty, Orientation } from './enums';
 import { PrintedProps } from './PrintedProps';
@@ -19,8 +19,10 @@ export type EntityFilter<N, T> =
   | ((entity: T) => boolean);
 
 export type MethodNames<E> = {
-  [K in keyof E]: E[K] extends (...args: any[]) => any ? K : never;
-}[keyof E];
+  [K in keyof Omit<E, 'exe'>]: Omit<E, 'exe'>[K] extends (...args: any[]) => any
+    ? K
+    : never;
+}[keyof Omit<E, 'exe'>];
 
 export type CallEntity<E> = MethodNames<E> extends infer M
   ? M extends MethodNames<E>
@@ -70,9 +72,10 @@ export type ChoiceOptions =
   | CardChoiceOptions;
 
 export type Action =
+  | ['SEQ', ...Action[]]
   | ['GAME', EntityAction<Game>]
-  | ['ZONE', EntityAction<Zone>]
-  | ['PLAYER', EntityAction<Player>]
+  | ['ZONE', ZoneId | ZoneId[], EntityAction<Zone>]
+  | ['PLAYER', EntityFilter<'player', Player>, EntityAction<Player>]
   | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
   | ['CHOOSE', ChoiceOptions];
 

@@ -32,6 +32,7 @@ export function createNewGameState(
 
   const int = new Interpreter2(game);
   int.stack.push(game.begin());
+  int.run();
 
   return int.toJSON();
 }

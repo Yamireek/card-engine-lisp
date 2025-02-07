@@ -1,4 +1,4 @@
-import { Tokens, CardId, Token } from './types';
+import { Tokens, CardId, Token, ZoneId } from './types';
 import { Game } from './Game';
 import {
   CardDefinition,
@@ -10,6 +10,7 @@ import {
   Side,
 } from '../state';
 import { cloneDeep } from 'lodash';
+import { Zone } from './Zone';
 
 export class Card {
   public def: CardDefinition;
@@ -22,6 +23,7 @@ export class Card {
   toJSON(): CardState {
     return {
       id: this.id,
+      zoneId: this.zone.id,
       ref: this.ref,
       up: this.up,
       token: this.token,
@@ -30,12 +32,20 @@ export class Card {
 
   constructor(
     public game: Game,
+    public zone: Zone,
     public id: CardId,
     public ref: CardRef,
     public up: Side
   ) {
     this.def = this.game.repo.get(ref);
     this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
+  }
+
+  flip(side: Side) {
+    this.up = side;
+    this.props = cloneDeep(
+      this.up === 'front' ? this.def.front : this.def.back
+    );
   }
 
   addToken: EntityMethod<Card, [number, Token]> = (amount, type) => ({
@@ -57,5 +67,18 @@ export class Card {
 
   dealDamage: EntityMethod<Card, [number]> = (amount) => ({
     body: ['CALL', 'addToken', amount, 'damage'],
+  });
+
+  moveTo: EntityMethod<Card, [ZoneId, Side?]> = (zoneId, side) => ({
+    body: () => {
+      const index = this.zone.cards.findIndex((c) => c === this);
+      this.zone.cards.splice(index, 1);
+      const zone = this.game.zone[zoneId];
+      zone.cards.push(this);
+      this.zone = zone;
+      if (side) {
+        this.flip(side);
+      }
+    },
   });
 }

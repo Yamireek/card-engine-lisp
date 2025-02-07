@@ -3,12 +3,14 @@ import { Game } from './Game';
 import { ZoneState } from '../state/State';
 import {
   CardRef,
+  EntityMethod,
   GameZoneType,
   PlayerZoneType,
   Side,
 } from '../state';
 import { Card } from './Card';
 import { Player } from './Player';
+import { shuffle } from '../utils';
 
 export class Zone {
   public cards: Card[] = [];
@@ -33,8 +35,14 @@ export class Zone {
 
   addCards(definitions: CardRef[], up: Side) {
     for (const def of definitions) {
-      const card = this.game.addCard(def, up);
+      const card = this.game.addCard(this, def, up);
       this.cards.push(card);
     }
   }
+
+  shuffle: EntityMethod<Zone, []> = () => ({
+    body: () => {
+      shuffle(this.cards);
+    },
+  });
 }
