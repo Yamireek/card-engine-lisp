@@ -27,7 +27,7 @@ export type Card3dProps = React.PropsWithChildren<{
   showId?: boolean;
 }>;
 
-export const Card3d = observer((props: Card3dProps) => {
+export const Card3d = (props: Card3dProps) => {
   const detail = useContext(DetailContext);
   const { invalidate } = useThree();
 
@@ -107,4 +107,4 @@ export const Card3d = observer((props: Card3dProps) => {
       )}
     </animated.group>
   );
-});
+};
