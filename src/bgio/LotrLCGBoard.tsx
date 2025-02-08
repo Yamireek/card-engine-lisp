@@ -19,6 +19,7 @@ export type LotrLCGProps = BoardProps<State>;
 export const LotrLCGBoard = (props: LotrLCGProps) => {
   const settings = useSettings();
   const navigate = useNavigate();
+  const playerId = validPlayerId(props.playerID);
 
   const interpreter = useMemo(() => {
     const game = new Game(
@@ -56,10 +57,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
         game: interpreter.game,
         int: interpreter,
         state: props.G,
-        playerId:
-          props.isMultiplayer && props.playerID
-            ? validPlayerId(props.playerID)
-            : undefined,
+        playerId: props.isMultiplayer && playerId ? playerId : undefined,
         undo: props.undo,
         redo: props.redo,
         leave: () => {

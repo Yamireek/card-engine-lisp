@@ -7,14 +7,14 @@ export function validPlayerId(id?: number | string | null): PlayerId {
 
   if (typeof id === 'number') {
     if (id >= 0 && id <= 4) {
-      return id.toString() as PlayerId;
+      return id + 1;
     } else {
       throw new Error('invalid playerId');
     }
   }
 
   if (['0', '1', '2', '3'].includes(id)) {
-    return id as PlayerId;
+    return Number(id + 1) as PlayerId;
   } else {
     throw new Error('invalid playerId');
   }

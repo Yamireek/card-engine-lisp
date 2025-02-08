@@ -41,7 +41,7 @@ export type Types = {
 
 export class Game {
   public nextId = 1;
-  public player: Partial<Record<PlayerId, Player>> = {};
+  public player: Record<PlayerId, Player> = {};
   public zone: Record<ZoneId, Zone> = {};
   public card: Record<CardId, Card> = {};
   public effects: Effect[] = [];
@@ -49,11 +49,9 @@ export class Game {
   toJSON(): GameState {
     return {
       nextId: this.nextId,
-      players: values(this.player).map((p) => p.toJSON()),
-      zones: values(this.zone).map((z) => z.toJSON()),
-      cards: values(this.zone)
-        .flatMap((z) => z.cards)
-        .map((c) => c.toJSON()),
+      players: this.players.map((p) => p.toJSON()),
+      zones: this.zones.map((z) => z.toJSON()),
+      cards: this.zones.flatMap((z) => z.cards).map((c) => c.toJSON()),
       effects: this.effects.map(stringify),
     };
   }
@@ -121,22 +119,16 @@ export class Game {
   }
 
   private addPlayer(deck: PlayerDeck) {
-    const id = !this.player[0]
-      ? '0'
-      : !this.player[1]
-      ? '1'
-      : !this.player[2]
-      ? '2'
-      : '3';
+    const id = this.players.length + 1;
 
     const heroes = deck.heroes.map((h) => this.repo.get(h));
 
     const player = new Player(
       this,
-      id,
+      Number(id),
       sum(heroes.map((h) => h.front.threatCost ?? 0))
     );
-    this.player[id] = player;
+    this.player[Number(id)] = player;
 
     this.addZone('library', player).addCards(deck.library, 'back');
     this.addZone('hand', player);

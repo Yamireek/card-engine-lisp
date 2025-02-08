@@ -2,27 +2,28 @@ import { useContext } from 'react';
 import { StateContext } from '../game/StateContext';
 import { LotrCardArea } from './LotrCardArea';
 import { LotrDeck3d } from './LotrDeck3d';
-import { Player, PlayerId } from '@card-engine-lisp/engine';
-import { Vector3 } from './types';
+import { Player } from '@card-engine-lisp/engine';
 
-const positions: Record<number, Partial<Record<PlayerId, Vector3>>> = {
-  '1': { '0': [-0.155, 0.39, 0] },
-  '2': { '0': [-0.155, 0.39, 0], '1': [0.575, 0.39, 0] },
-  '3': { '0': [0.5, -0.4, 0], '1': [-0.5, -0.4, 0], '2': [0, 0.4, 0] },
-  '4': {
-    '0': [0.5, -0.4, 0],
-    '1': [-0.5, -0.4, 0],
-    '2': [0.5, 0.4, 0],
-    '3': [-0.5, 0.4, 0],
+const positions = {
+  1: { 1: [-0.155, 0.39, 0] },
+  2: { 1: [-0.155, 0.39, 0], 2: [0.575, 0.39, 0] },
+  3: { 1: [0.5, -0.4, 0], 2: [-0.5, -0.4, 0], 3: [0, 0.4, 0] },
+  4: {
+    1: [0.5, -0.4, 0],
+    2: [-0.5, -0.4, 0],
+    3: [0.5, 0.4, 0],
+    4: [-0.5, 0.4, 0],
   },
-};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
 
-const rotations: Record<number, Partial<Record<PlayerId, number>>> = {
-  '1': { '0': 0 },
-  '2': { '0': 0, '1': 0 },
-  '3': { '0': 0, '1': 0, '2': Math.PI },
-  '4': { '0': 0, '1': 0, '2': Math.PI, '3': Math.PI },
-};
+const rotations = {
+  1: { 1: 0 },
+  2: { 1: 0, 2: 0 },
+  3: { 1: 0, 2: 0, 3: Math.PI },
+  4: { 1: 0, 2: 0, 3: Math.PI, 4: Math.PI },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
 
 export const PlayerAreas = (props: { player: Player }) => {
   const { game } = useContext(StateContext);
