@@ -77,6 +77,7 @@ export type Action =
   | ['ZONE', ZoneId | ZoneId[], EntityAction<Zone>]
   | ['PLAYER', EntityFilter<'player', Player>, EntityAction<Player>]
   | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
+  | ['CALL', EntityAction<Game>]
   | ['CHOOSE', ChoiceOptions];
 
 export type Effect = {

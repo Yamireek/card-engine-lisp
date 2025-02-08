@@ -12,6 +12,7 @@ import {
   Difficulty,
   EntityAction,
   EntityFilter,
+  EntityMethod,
   GameState,
   GameZoneType,
   PlayerZoneType,
@@ -33,6 +34,7 @@ export type Types = {
     filter: EntityFilter<'PLAYER', Player>;
   };
   ZONE: { id: ZoneId; entity: Zone; filter: EntityFilter<'ZONE', Zone> };
+  GAME: { id: never; entity: Game; filter: never };
 };
 
 export class Game {
@@ -159,6 +161,19 @@ export class Game {
     return values(this.zone);
   }
 
+  get encounterDeck() {
+    return this.findZone('encounterDeck');
+  }
+
+  findZone(type: GameZoneType) {
+    const zone = this.zones.find((z) => z.type === type && !z.owner);
+    if (!zone) {
+      throw new Error('zone not found');
+    } else {
+      return zone;
+    }
+  }
+
   getCard(name: string) {
     const card = this.cards.find((c) => c.props.name === name);
     if (!card) {
@@ -280,47 +295,24 @@ export class Game {
     }
   }
 
+  setup: EntityMethod<Game, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  playRound: EntityMethod<Game, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
   begin(): Action {
-    // TODO
-
-    /*return [
-    ...data.players.map((d) => ({ addPlayer: d })),
-    {
-      setupScenario: { scenario: data.scenario, difficulty: data.difficulty },
-    },
-    'shuffleEncounterDeck',
-    {
-      player: 'each',
-      action: 'shuffleLibrary',
-    },
-    {
-      player: 'each',
-      action: {
-        draw: 6 + data.extra.cards,
-      },
-    },
-    {
-      card: { type: 'hero' },
-      action: { generateResources: data.extra.resources },
-    },
-    {
-      card: { top: 'questDeck' },
-      action: {
-        move: {
-          from: 'questDeck',
-          to: 'questArea',
-        },
-      },
-    },
-    'setup',
-    gameRound(),*/
-
     return [
       'GAME',
       [
         'SEQ',
+        ['ZONE', this.encounterDeck.id, ['CALL', 'shuffle']],
         ['ZONE', this.players.map((p) => p.library.id), ['CALL', 'shuffle']],
         ['PLAYER', 'ALL', ['CALL', 'draw', 6]],
+        ['CALL', 'setup'],
+        ['CALL', 'playRound'],
       ],
     ];
   }

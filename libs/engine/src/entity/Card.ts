@@ -26,7 +26,7 @@ export class Card {
       zoneId: this.zone.id,
       ref: this.ref,
       up: this.up,
-      token: this.token,
+      token: cloneDeep(this.token),
     };
   }
 

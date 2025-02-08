@@ -2,6 +2,7 @@
 import { Action, State, EntityAction } from '../state';
 import { stringify } from '../utils';
 import { Game, Types } from './Game';
+import patch from 'fast-json-patch';
 
 export class Interpreter {
   public stack: Action[] = [];
@@ -57,7 +58,10 @@ export class Interpreter {
         return true;
       }
       case 'GAME': {
-        return this.exe(action[1] as any);
+        return this.exeOn('GAME', this.game, action[1]);
+      }
+      case 'CALL': {
+        return this.exeOn('GAME', this.game, action);
       }
       case 'SEQ': {
         const [, ...inner] = action;
@@ -81,8 +85,20 @@ export class Interpreter {
         const [, name, ...args] = action;
         const method = (entity as any)[name as any](...args);
         if (typeof method.body === 'function') {
-          console.log('update', entity, name, ...args);
+          const prev = entity.toJSON();
           method.body();
+          const next = entity.toJSON();
+          if (type === 'GAME' || entity instanceof Game) {
+            console.log('action', type, action, patch.compare(prev, next));
+          } else {
+            console.log(
+              'action',
+              type,
+              entity.id,
+              action,
+              patch.compare(prev, next)
+            );
+          }
           return false;
         } else {
           if (!method.isAllowed || method.isAllowed()) {
@@ -94,7 +110,14 @@ export class Interpreter {
       }
       case 'SEQ': {
         const [, ...actions] = action;
-        this.stack.unshift(...actions.map((a) => [type, entity.id, a] as any));
+        if (type === 'GAME' || entity instanceof Game) {
+          this.stack.unshift(...actions.map((a) => [...a] as any));
+        } else {
+          this.stack.unshift(
+            ...actions.map((a) => [type, entity.id, a] as any)
+          );
+        }
+
         return false;
       }
       case 'GAME': {

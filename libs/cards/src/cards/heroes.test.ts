@@ -1,10 +1,9 @@
 import { it, expect } from 'vitest';
-import { Game } from '@card-engine-lisp/engine';
 import { core } from '../index';
-import { cards } from '../repo';
+import { TestGame } from '../TestGame';
 
 it('Gimli', () => {
-  const game = new Game(cards, {
+  const game = new TestGame({
     type: 'scenario',
     data: {
       scenario: {
@@ -29,9 +28,9 @@ it('Gimli', () => {
 
   const gimli = game.getCard('Gimli');
   expect(gimli.props.attack).toEqual(2);
-  game.exe(['CARD', gimli.id, ['CALL', 'dealDamage', 1]]);
+  gimli.exe(['CALL', 'dealDamage', 1]);
   expect(gimli.props.attack).toEqual(3);
-  game.exe(['CARD', gimli.id, ['CALL', 'heal', 1]]);
+  gimli.exe(['CALL', 'heal', 1]);
   expect(gimli.props.attack).toEqual(2);
 });
 
