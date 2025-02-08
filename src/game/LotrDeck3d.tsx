@@ -5,6 +5,7 @@ import { last } from 'ramda';
 import { getCardImageUrl } from './utils';
 import { useGameState } from './StateContext';
 import { useTextures } from './../images/textures';
+import { observer } from 'mobx-react-lite';
 
 function getDeckImage(game: Game, zone: Zone): string {
   const card = last(zone.cards);
@@ -19,7 +20,7 @@ function getDeckImage(game: Game, zone: Zone): string {
 
 export type LotrDeck3dProps = { zone: Zone; position: Vector3 };
 
-export const LotrDeck3d = (props: LotrDeck3dProps) => {
+export const LotrDeck3d = observer((props: LotrDeck3dProps) => {
   const { game } = useGameState();
   const { texture } = useTextures();
 
@@ -32,4 +33,4 @@ export const LotrDeck3d = (props: LotrDeck3dProps) => {
       texture={texture[getDeckImage(game, props.zone)]}
     />
   );
-};
+});
