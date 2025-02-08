@@ -66,7 +66,10 @@ export type ActionChoiceOptions = BaseChoiceOptions & {
   options: Array<[string, Action]>;
 };
 
+export type PlayerActions = { type: 'player_actions'; label: string };
+
 export type ChoiceOptions =
+  | PlayerActions
   | ActionChoiceOptions
   | PlayerChoiceOptions
   | CardChoiceOptions;

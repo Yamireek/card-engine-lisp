@@ -370,16 +370,13 @@ export class Game {
       'SEQ',
       ['CALL', 'beginPhase', 'refresh'],
       ['CARD', (c: Card) => c.exhausted, ['CALL', 'refresh']],
-      ['CARD', (c: Card) => c.props.type === 'hero', ['CALL', 'dealDamage', 1]],
       ['PLAYER', 'ALL', ['CALL', 'incrementThreat', 1]],
       //['CALL', 'passFirstPlayerToken'], // TODO
       [
         'CHOOSE',
         {
-          player: '0',
-          label: 'Choose card',
-          type: 'action',
-          options: [['A', ['CARD', 'ALL', ['CALL', 'dealDamage', 1]]]],
+          label: 'End refresh phase',
+          type: 'player_actions',
         },
       ],
       ['CALL', 'endPhase'],
@@ -387,7 +384,7 @@ export class Game {
   });
 
   endRound: EntityMethod<Game, []> = () => ({
-    body: ['SEQ'], // TODO
+    body: ['SEQ', ['CALL', 'playRound']], // TODO
   });
 
   beginPhase: EntityMethod<Game, [Phase]> = () => ({
