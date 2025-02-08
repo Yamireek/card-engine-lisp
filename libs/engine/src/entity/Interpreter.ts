@@ -38,6 +38,7 @@ export class Interpreter {
         break;
       }
     }
+    this.game.recalculate();
   }
 
   exe(action: Action): boolean {
@@ -128,6 +129,9 @@ export class Interpreter {
       case 'GAME': {
         const [, a] = action;
         return this.exe(a as any);
+      }
+      case 'CHOOSE': {
+        return this.exe(action);
       }
       default: {
         throw new Error('uknown action: ' + JSON.stringify(action));

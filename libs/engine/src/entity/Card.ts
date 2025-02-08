@@ -59,9 +59,16 @@ export class Card {
     },
   });
 
-  refresh: EntityMethod<Card> = () => ({
+  ready: EntityMethod<Card> = () => ({
     body: () => {
       this.tapped = false;
+    },
+  });
+
+  exhaust: EntityMethod<Card> = () => ({
+    isAllowed: () => !this.tapped,
+    body: () => {
+      this.tapped = true;
     },
   });
 

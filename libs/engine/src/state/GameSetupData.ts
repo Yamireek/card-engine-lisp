@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GameState } from '.';
-import { Card, Game, Player, PlayerId, Zone, ZoneId } from '../entity';
+import { Card, CardId, Game, Player, PlayerId, Zone, ZoneId } from '../entity';
 import { Flavor } from '../types';
 import { Difficulty, Orientation } from './enums';
 import { PrintedProps } from './PrintedProps';
@@ -51,13 +51,13 @@ export type BaseChoiceOptions = {
 
 export type CardChoiceOptions = BaseChoiceOptions & {
   type: 'card';
-  filter: EntityFilter<'card', Card>;
+  filter: EntityFilter<'CARD', Card>;
   action: EntityAction<Card>;
 };
 
 export type PlayerChoiceOptions = BaseChoiceOptions & {
   type: 'player';
-  filter: EntityFilter<'player', Player>;
+  filter: EntityFilter<'PLAYER', Player>;
   action: EntityAction<Player>;
 };
 
@@ -83,15 +83,26 @@ export type Action =
   | ['CALL', EntityAction<Game>]
   | ['CHOOSE', ChoiceOptions];
 
+export type CardFilter = 'ALL' | CardId | CardId[] | ((c: Card) => boolean);
+
 export type Effect = {
   type: 'card';
-  target: EntityFilter<'card', Card>;
+  target: CardFilter;
   modifier: (card: Card) => (props: CardProps) => void;
 };
 
 export type CardRef = `${string}/${number}`;
 
-export type CardProps = PrintedProps & { abilities: Array<Ability> };
+export type SpellAction = {
+  desc: string;
+  
+  action: (self: Card) => EntityAction<Card>;
+};
+
+export type CardProps = PrintedProps & {
+  abilities: Ability[];
+  actions: SpellAction[];
+};
 
 export type CardDefinition = {
   front: CardProps;

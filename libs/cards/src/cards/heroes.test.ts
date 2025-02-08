@@ -73,30 +73,48 @@ it('Gimli', () => {
 //   expect(gloin.token.resources).toEqual(2);
 // });
 
-// it('Beravor', () => {
-//   const action =
-//     'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.';
+it('Beravor', () => {
+  const action =
+    'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.';
 
-//   const game = new TestEngine({
-//     players: [
-//       {
-//         playerArea: [core.hero.beravor],
-//         library: [core.ally.veteranAxehand, core.ally.veteranAxehand],
-//       },
-//     ],
-//   });
+  const game = new TestGame({
+    type: 'scenario',
+    data: {
+      scenario: {
+        name: 'empty',
+        quest: [],
+        sets: [],
+      },
+      players: [
+        {
+          name: 'test',
+          heroes: [core.hero.beravor],
+          library: [
+            core.ally.veteranAxehand,
+            core.ally.veteranAxehand,
+            core.ally.veteranAxehand,
+          ],
+        },
+      ],
+      difficulty: 'normal',
+      extra: {
+        cards: 0,
+        resources: 0,
+      },
+    },
+  });
 
-//   const player = game.getPlayer('0');
-//   const beravor = game.getCard('Beravor');
-//   expect(player.hand.cards.length).toEqual(0);
-//   expect(player.library.cards.length).toEqual(2);
-//   expect(game.actions.length).toEqual(1);
-//   game.chooseAction(action);
-//   expect(player.hand.cards.length).toEqual(2);
-//   expect(game.actions.length).toEqual(0);
-//   beravor.update('ready');
-//   expect(game.actions.length).toEqual(0);
-// });
+  const player = game.getPlayer('0')!;
+  const beravor = game.getCard('Beravor');
+  expect(player.hand.cards.length).toEqual(0);
+  expect(player.library.cards.length).toEqual(3);
+  expect(game.actions.length).toEqual(1);
+  game.do(action);
+  expect(player.hand.cards.length).toEqual(2);
+  expect(game.actions.length).toEqual(0);
+  beravor.exe(['CALL', 'ready']);
+  expect(game.actions.length).toEqual(0);
+});
 
 // it('Éowyn', async () => {
 //   const action =

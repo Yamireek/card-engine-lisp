@@ -12,34 +12,36 @@ export const beravor = cards.add(
       hitPoints: 4,
       traits: ['dúnedain', 'ranger'],
       sphere: 'lore',
+    },
+    {
+      description:
+        'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.',
+      code: (self) => ({
+        type: 'card' as const,
+        target: self.id,
+        modifier: () => (p) => {
+          p.actions.push({
+            desc: 'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.',
+            // TODO limit
+            action: () => [
+              'SEQ',
+              ['CALL', 'exhaust'],
+              [
+                'CHOOSE',
+                {
+                  type: 'player',
+                  player: self.zone.owner?.id ?? '0',
+                  label: 'Choose player',
+                  filter: 'ALL',
+                  action: ['CALL', 'draw', 2],
+                  min: 1,
+                  max: 1,
+                },
+              ],
+            ],
+          });
+        },
+      }),
     }
-    // {
-    //   description:
-    //     'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.',
-    //   limit: {
-    //     max: 1,
-    //     type: 'round',
-    //   },
-    //   action: {
-    //     payment: {
-    //       cost: {
-    //         card: 'self',
-    //         action: 'exhaust',
-    //       },
-    //       effect: {
-    //         player: 'controller',
-    //         action: {
-    //           choosePlayerActions: {
-    //             title: 'Choose player to draw 2 cards',
-    //             target: 'each',
-    //             action: {
-    //               draw: 2,
-    //             },
-    //           },
-    //         },
-    //       },
-    //     },
-    //   },
-    // }
   )
 );

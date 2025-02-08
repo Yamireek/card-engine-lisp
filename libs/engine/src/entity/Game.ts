@@ -224,6 +224,7 @@ export class Game {
       card.props = cloneDeep(
         card.up === 'front' ? card.def.front : card.def.back
       );
+      card.props.actions = [];
     }
 
     const effects: Effect[] = [];
@@ -245,25 +246,55 @@ export class Game {
     }
   }
 
-  canCardExe(card: Card, action: EntityAction<Card>): boolean {
-    const type = action[0];
-    switch (type) {
+  canEntityExe<E extends keyof Types>(
+    type: E,
+    entity: Types[E]['entity'],
+    action: EntityAction<Types[E]['entity']>
+  ): boolean {
+    const inst = action[0];
+    switch (inst) {
       case 'CALL': {
         const [, name, ...args] = action;
-        const method = (card as any)[name as any](...args);
-        if (typeof method.body === 'function') {
-          return true;
-        } else {
-          return method.isAllowed ? method.isAllowed() : true;
-        }
+        const method = (entity as any)[name as any](...args);
+        return method.isAllowed ? method.isAllowed() : true;
       }
       case 'SEQ': {
         const [, ...actions] = action;
-        return actions.every((a) => this.canCardExe(card, a));
+        return actions.every((a) => this.canEntityExe(type, entity, a));
+      }
+      case 'CHOOSE': {
+        const [, options] = action;
+        return this.canExe(['CHOOSE', options]);
       }
       default: {
         throw new Error('not implemented');
       }
+    }
+  }
+
+  canExe(action: Action): boolean {
+    const type = action[0];
+    switch (type) {
+      case 'CHOOSE': {
+        const options = action[1];
+        switch (options.type) {
+          case 'player': {
+            const targets = this.filter('PLAYER', options.filter);
+            const filtered = targets.filter((p) =>
+              this.canEntityExe('PLAYER', p, options.action)
+            );
+            if (options.min && filtered.length < options.min) {
+              return false;
+            }
+
+            return true;
+          }
+          default:
+            throw new Error('not implemented');
+        }
+      }
+      default:
+        throw new Error('not implemented');
     }
   }
 
@@ -369,7 +400,7 @@ export class Game {
     body: [
       'SEQ',
       ['CALL', 'beginPhase', 'refresh'],
-      ['CARD', (c: Card) => c.exhausted, ['CALL', 'refresh']],
+      ['CARD', (c: Card) => c.exhausted, ['CALL', 'ready']],
       ['PLAYER', 'ALL', ['CALL', 'incrementThreat', 1]],
       //['CALL', 'passFirstPlayerToken'], // TODO
       [
