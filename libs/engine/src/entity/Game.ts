@@ -15,6 +15,7 @@ import {
   EntityMethod,
   GameState,
   GameZoneType,
+  Phase,
   PlayerZoneType,
   Side,
   ZoneType,
@@ -24,7 +25,8 @@ import { Zone } from './Zone';
 import { Card } from './Card';
 import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
-import { cloneDeep, isArray } from 'lodash';
+import { cloneDeep, isArray, sum } from 'lodash';
+import { makeAutoObservable } from 'mobx';
 
 export type Types = {
   CARD: { id: CardId; entity: Card; filter: EntityFilter<'CARD', Card> };
@@ -56,7 +58,11 @@ export class Game {
     };
   }
 
-  constructor(public repo: CardsRepo, setup: GameSetupData) {
+  constructor(
+    public repo: CardsRepo,
+    setup: GameSetupData,
+    observable = false
+  ) {
     if (setup.type === 'scenario') {
       this.prepareScenario(setup.data.scenario, setup.data.difficulty);
       for (const playerDeck of setup.data.players) {
@@ -68,7 +74,11 @@ export class Game {
       this.nextId = state.nextId;
 
       for (const player of state.players) {
-        (this.player as any)[player.id as any] = new Player(this, player.id);
+        (this.player as any)[player.id as any] = new Player(
+          this,
+          player.id,
+          player.threat
+        );
       }
 
       for (const zoneDto of state.zones) {
@@ -96,6 +106,18 @@ export class Game {
     }
 
     this.recalculate();
+    if (observable) {
+      makeAutoObservable(this);
+      for (const player of this.players) {
+        makeAutoObservable(player);
+      }
+      for (const zone of this.zones) {
+        makeAutoObservable(zone);
+      }
+      for (const card of this.cards) {
+        makeAutoObservable(card);
+      }
+    }
   }
 
   private addPlayer(deck: PlayerDeck) {
@@ -107,7 +129,13 @@ export class Game {
       ? '2'
       : '3';
 
-    const player = new Player(this, id);
+    const heroes = deck.heroes.map((h) => this.repo.get(h));
+
+    const player = new Player(
+      this,
+      id,
+      sum(heroes.map((h) => h.front.threatCost ?? 0))
+    );
     this.player[id] = player;
 
     this.addZone('library', player).addCards(deck.library, 'back');
@@ -300,6 +328,73 @@ export class Game {
   });
 
   playRound: EntityMethod<Game, []> = () => ({
+    body: [
+      'SEQ',
+      ['CALL', 'playResourcePhase'],
+      ['CALL', 'playPlanningPhase'],
+      ['CALL', 'playQuestPhase'],
+      ['CALL', 'playTravelPhase'],
+      ['CALL', 'playEncounterPhase'],
+      ['CALL', 'playCombatPhase'],
+      ['CALL', 'playRefreshPhase'],
+      ['CALL', 'endRound'],
+    ],
+  });
+
+  playResourcePhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'resource'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playPlanningPhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'planning'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playQuestPhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'quest'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playTravelPhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'travel'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playEncounterPhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'encounter'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playCombatPhase: EntityMethod<Game, []> = () => ({
+    body: ['SEQ', ['CALL', 'beginPhase', 'combat'], ['CALL', 'endPhase']], // TODO
+  });
+
+  playRefreshPhase: EntityMethod<Game, []> = () => ({
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'refresh'],
+      ['CARD', (c: Card) => c.exhausted, ['CALL', 'refresh']],
+      ['CARD', (c: Card) => c.props.type === 'hero', ['CALL', 'dealDamage', 1]],
+      ['PLAYER', 'ALL', ['CALL', 'incrementThreat', 1]],
+      //['CALL', 'passFirstPlayerToken'], // TODO
+      [
+        'CHOOSE',
+        {
+          player: '0',
+          label: 'Choose card',
+          type: 'action',
+          options: [['A', ['CARD', 'ALL', ['CALL', 'dealDamage', 1]]]],
+        },
+      ],
+      ['CALL', 'endPhase'],
+    ],
+  });
+
+  endRound: EntityMethod<Game, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  beginPhase: EntityMethod<Game, [Phase]> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  endPhase: EntityMethod<Game, []> = () => ({
     body: ['SEQ'], // TODO
   });
 

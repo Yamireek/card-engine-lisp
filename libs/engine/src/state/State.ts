@@ -17,6 +17,7 @@ export type CardState = {
 
 export type PlayerState = {
   id: PlayerId;
+  threat: number;
 };
 
 export type ZoneState = {

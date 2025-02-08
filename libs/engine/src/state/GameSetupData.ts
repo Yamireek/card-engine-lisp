@@ -32,7 +32,7 @@ export type CallEntity<E> = MethodNames<E> extends infer M
     : never
   : never;
 
-export type EntityMethod<E, Args extends any[]> = (...args: Args) => {
+export type EntityMethod<E, Args extends any[] = void[]> = (...args: Args) => {
   isAllowed?: () => boolean;
   body: EntityAction<E> | (() => void);
 };

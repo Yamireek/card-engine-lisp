@@ -6,6 +6,7 @@ import { Texture } from 'three';
 import { DetailContext } from '../game/DetailContext';
 import { Dimensions3, CardTexture, Dimensions, Vector3 } from './types';
 import { Orientation } from '@card-engine-lisp/engine';
+import { observer } from 'mobx-react-lite';
 
 export const cardSize: Dimensions3 = {
   width: 0.0635,
@@ -26,7 +27,7 @@ export type Card3dProps = React.PropsWithChildren<{
   showId?: boolean;
 }>;
 
-export const Card3d = (props: Card3dProps) => {
+export const Card3d = observer((props: Card3dProps) => {
   const detail = useContext(DetailContext);
   const { invalidate } = useThree();
 
@@ -106,4 +107,4 @@ export const Card3d = (props: Card3dProps) => {
       )}
     </animated.group>
   );
-};
+});

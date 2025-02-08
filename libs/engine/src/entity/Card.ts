@@ -17,6 +17,7 @@ export class Card {
   public props: CardProps;
 
   public modifiers: Modifier[] = [];
+  public tapped = false;
 
   public token: Tokens = { damage: 0, progress: 0, resource: 0 };
 
@@ -41,6 +42,10 @@ export class Card {
     this.props = cloneDeep(up === 'front' ? this.def.front : this.def.back);
   }
 
+  get exhausted() {
+    return this.tapped;
+  }
+
   flip(side: Side) {
     this.up = side;
     this.props = cloneDeep(
@@ -51,6 +56,12 @@ export class Card {
   addToken: EntityMethod<Card, [number, Token]> = (amount, type) => ({
     body: () => {
       this.token[type] += amount;
+    },
+  });
+
+  refresh: EntityMethod<Card> = () => ({
+    body: () => {
+      this.tapped = false;
     },
   });
 

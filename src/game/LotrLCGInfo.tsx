@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { Fragment, useContext } from 'react';
 import { StateContext } from './StateContext';
 import { GameInfo } from './GameInfo';
 import {
@@ -7,10 +7,15 @@ import {
   IconButton,
   Icon,
   Typography,
+  Tooltip,
+  Divider,
 } from '@mui/material';
+import { stringify } from '@card-engine-lisp/engine';
+import { Observer } from 'mobx-react-lite';
 
 export const LotrLCGInfo = () => {
-  const { game, state, playerId, undo, redo, leave } = useContext(StateContext);
+  const { game, state, playerId, undo, redo, leave, int } =
+    useContext(StateContext);
 
   const totalWillpower = 1; // TODO
 
@@ -107,6 +112,22 @@ export const LotrLCGInfo = () => {
 
             <IconButton
               onClick={() => {
+                int.step();
+              }}
+            >
+              <Icon>skip_next</Icon>
+            </IconButton>
+
+            <IconButton
+              onClick={() => {
+                int.run();
+              }}
+            >
+              <Icon>play_arrow</Icon>
+            </IconButton>
+
+            <IconButton
+              onClick={() => {
                 leave();
               }}
             >
@@ -133,17 +154,35 @@ export const LotrLCGInfo = () => {
           </Paper>
         )} */}
         <Paper style={{ padding: 4, overflow: 'auto', pointerEvents: 'auto' }}>
-          <Typography variant="caption">Possible actions</Typography>
+          <Typography variant="caption">Next actions:</Typography>
+          <Observer>
+            {() => (
+              <>
+                {int.stack.map((action, i) => (
+                  <Fragment key={i}>
+                    <Tooltip
+                      title={<pre>{stringify(action)}</pre>}
+                      placement="left"
+                    >
+                      <Typography
+                        style={{
+                          whiteSpace: 'nowrap',
+                          overflow: 'clip',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {stringify(action)}
+                      </Typography>
+                    </Tooltip>
+                    <Divider variant="fullWidth" />
+                  </Fragment>
+                ))}
+              </>
+            )}
+          </Observer>
           {/* {actions.map((a, i) => {
             const title = view.cards[a.card].props.name ?? '';
-            return (
-              <Fragment key={title + i}>
-                <Tooltip title={title} placement="left">
-                  <Typography>{a.description}</Typography>
-                </Tooltip>
-                <Divider variant="fullWidth" />
-              </Fragment>
-            );
+            
           })} */}
         </Paper>
       </Stack>

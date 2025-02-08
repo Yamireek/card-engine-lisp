@@ -1,8 +1,9 @@
-import { Game, PlayerId, State } from '@card-engine-lisp/engine';
+import { Game, Interpreter, PlayerId, State } from '@card-engine-lisp/engine';
 import { createContext, useContext } from 'react';
 
 export const StateContext = createContext<{
   game: Game;
+  int: Interpreter;
   state: State;
   playerId?: PlayerId;
   undo: () => void;

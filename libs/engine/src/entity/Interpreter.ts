@@ -3,6 +3,7 @@ import { Action, State, EntityAction } from '../state';
 import { stringify } from '../utils';
 import { Game, Types } from './Game';
 import patch from 'fast-json-patch';
+import { makeAutoObservable } from 'mobx';
 
 export class Interpreter {
   public stack: Action[] = [];
@@ -14,7 +15,11 @@ export class Interpreter {
     };
   }
 
-  constructor(public game: Game) {}
+  constructor(public game: Game, observable = false) {
+    if (observable) {
+      makeAutoObservable(this);
+    }
+  }
 
   step() {
     const next = this.stack.shift();

@@ -8,10 +8,10 @@ export class Player {
   public zones: Zone[] = [];
 
   toJSON(): PlayerState {
-    return { id: this.id };
+    return { id: this.id, threat: this.threat };
   }
 
-  constructor(public game: Game, public id: PlayerId) {}
+  constructor(public game: Game, public id: PlayerId, public threat: number) {}
 
   getZone(type: PlayerZoneType): Zone {
     const zone = this.game.zones.find(
@@ -30,6 +30,12 @@ export class Player {
   get hand() {
     return this.getZone('hand');
   }
+
+  incrementThreat: EntityMethod<Player, [number]> = (amount) => ({
+    body: () => {
+      this.threat += amount;
+    },
+  });
 
   draw: EntityMethod<Player, [number]> = (amount) => ({
     isAllowed: () => this.library.cards.length > 0,

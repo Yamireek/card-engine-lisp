@@ -21,11 +21,15 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
   const navigate = useNavigate();
 
   const interpreter = useMemo(() => {
-    const game = new Game(cards, {
-      type: 'json',
-      data: props.G.game,
-    });
-    const int = new Interpreter(game);
+    const game = new Game(
+      cards,
+      {
+        type: 'json',
+        data: props.G.game,
+      },
+      true
+    );
+    const int = new Interpreter(game, true);
     int.stack = props.G.stack.map((s) => eval(s));
     return int;
   }, [props.G]);
@@ -50,6 +54,7 @@ export const LotrLCGBoard = (props: LotrLCGProps) => {
     <StateContext.Provider
       value={{
         game: interpreter.game,
+        int: interpreter,
         state: props.G,
         playerId:
           props.isMultiplayer && props.playerID

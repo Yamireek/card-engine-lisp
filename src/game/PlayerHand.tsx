@@ -19,7 +19,7 @@ export const PlayerHand = observer((props: { player: Player }) => {
       rotate={2}
       onOver={(id) => detail.setDetail(id)}
       onActivation={(id) => {
-        // TOdO
+        // TODO
         return;
       }}
     />
