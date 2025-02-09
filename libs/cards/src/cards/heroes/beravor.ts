@@ -25,12 +25,14 @@ export const beravor = cards.add(
             // TODO limit
             action: () => [
               'SEQ',
+              ['SPEND_LIMIT', { name: 'beravor', usages: 1, max: 1 }],
+              ['SET_TRIGGER', 'end_of_round', ['RESET_LIMIT', 'beravor']],
               ['CALL', 'exhaust'],
               [
                 'CHOOSE',
                 {
                   type: 'player',
-                  player: self.zone.owner?.id ?? '0',
+                  player: self.zone.owner?.id ?? 1,
                   label: 'Choose player',
                   filter: 'ALL',
                   action: ['CALL', 'draw', 2],

@@ -1,21 +1,114 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Action,
   Card,
+  CardRef,
   EntityAction,
   Game,
-  GameSetupData,
+  GameZoneType,
   Interpreter,
   PlayerId,
+  PlayerZoneType,
+  Side,
+  State,
+  ZoneState,
+  GameState,
+  CardState,
+  stringify,
+  Triggers,
 } from '@card-engine-lisp/engine';
 import { cards } from './repo';
+
+export type SimpleState = {
+  players: Array<Partial<Record<PlayerZoneType, SimpleCardState[]>>>;
+} & Partial<Record<GameZoneType, SimpleCardState[]>>;
+
+export type SimpleCardState =
+  | CardRef
+  | {
+      ref: CardRef;
+      resources?: number;
+      progress?: number;
+      damage?: number;
+      exhausted?: boolean;
+      attachments?: CardRef[];
+      side?: Side;
+    };
+
+export function createState(initState: SimpleState): State {
+  const state: GameState = {
+    players: [],
+    zones: [],
+    cards: [],
+    effects: [],
+    limits: {},
+    nextId: 1,
+    triggers: stringify<Triggers>({ end_of_round: [] }),
+  };
+
+  for (let index = 0; index < initState.players.length; index++) {
+    state.players.push({ id: index + 1, threat: 30 }); // TODO init threat
+
+    const playerZones: PlayerZoneType[] = [
+      'library',
+      'hand',
+      'playerArea',
+      'engaged',
+      'discardPile',
+    ];
+
+    for (const zoneName of playerZones) {
+      const zone: ZoneState = {
+        id: state.nextId++,
+        type: zoneName,
+        cards: [],
+        owner: index + 1,
+      };
+
+      state.zones.push(zone);
+
+      if (initState.players[index][zoneName]) {
+        for (const card of initState.players[index][zoneName]!) {
+          const ref: CardRef = typeof card === 'string' ? card : card.ref;
+          const cardState: CardState = {
+            id: state.nextId++,
+            ref,
+            token: { damage: 0, progress: 0, resource: 0 },
+            up: zoneName === 'library' ? 'back' : 'front',
+            zoneId: zone.id,
+          };
+          state.cards.push(cardState);
+
+          if (typeof card === 'object') {
+            if (card.damage) {
+              cardState.token.damage += card.damage;
+            }
+            if (card.progress) {
+              cardState.token.progress += card.progress;
+            }
+            if (card.resources) {
+              cardState.token.resource += card.resources;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    game: state,
+    stack: [],
+  };
+}
 
 export class TestGame {
   public int: Interpreter;
   public game: Game;
 
-  constructor(setup: GameSetupData) {
-    this.game = new Game(cards, setup);
+  constructor(simpleState: SimpleState) {
+    const state = createState(simpleState);
+    this.game = new Game(cards, { type: 'json', data: state.game });
     this.int = new Interpreter(this.game);
     this.int.run();
   }
@@ -26,11 +119,16 @@ export class TestGame {
   }
 
   getPlayer(id: PlayerId) {
-    return this.game.player[id];
+    const player = this.game.player[id];
+    if (!player) {
+      throw new Error('player now found');
+    } else {
+      return player;
+    }
   }
 
   exe(action: Action) {
-    this.int.exe(action);
+    this.int.run(action);
     this.game.recalculate();
   }
 

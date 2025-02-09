@@ -38,8 +38,8 @@ export type EntityMethod<E, Args extends any[] = void[]> = (...args: Args) => {
 };
 
 export type EntityAction<T> =
-  | CallEntity<T>
   | ['SEQ', ...EntityAction<T>[]]
+  | CallEntity<T>
   | Action;
 
 export type BaseChoiceOptions = {
@@ -81,7 +81,10 @@ export type Action =
   | ['PLAYER', EntityFilter<'player', Player>, EntityAction<Player>]
   | ['CARD', EntityFilter<'card', Card>, EntityAction<Card>]
   | ['CALL', EntityAction<Game>]
-  | ['CHOOSE', ChoiceOptions];
+  | ['CHOOSE', ChoiceOptions]
+  | ['SPEND_LIMIT', { name: string; usages: number; max: number }]
+  | ['RESET_LIMIT', string]
+  | ['SET_TRIGGER', 'end_of_round', Action];
 
 export type CardFilter = 'ALL' | CardId | CardId[] | ((c: Card) => boolean);
 
@@ -95,7 +98,7 @@ export type CardRef = `${string}/${number}`;
 
 export type SpellAction = {
   desc: string;
-  
+
   action: (self: Card) => EntityAction<Card>;
 };
 

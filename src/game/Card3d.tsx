@@ -6,7 +6,6 @@ import { Texture } from 'three';
 import { DetailContext } from '../game/DetailContext';
 import { Dimensions3, CardTexture, Dimensions, Vector3 } from './types';
 import { Orientation } from '@card-engine-lisp/engine';
-import { observer } from 'mobx-react-lite';
 
 export const cardSize: Dimensions3 = {
   width: 0.0635,

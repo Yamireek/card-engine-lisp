@@ -4,26 +4,7 @@ import { TestGame } from '../TestGame';
 
 it('Gimli', () => {
   const game = new TestGame({
-    type: 'scenario',
-    data: {
-      scenario: {
-        name: 'empty',
-        quest: [],
-        sets: [],
-      },
-      players: [
-        {
-          name: 'test',
-          heroes: [core.hero.gimli],
-          library: [],
-        },
-      ],
-      difficulty: 'normal',
-      extra: {
-        cards: 0,
-        resources: 0,
-      },
-    },
+    players: [{ playerArea: [core.hero.gimli] }],
   });
 
   const gimli = game.getCard('Gimli');
@@ -32,6 +13,37 @@ it('Gimli', () => {
   expect(gimli.props.attack).toEqual(3);
   gimli.exe(['CALL', 'heal', 1]);
   expect(gimli.props.attack).toEqual(2);
+});
+
+it('Beravor', () => {
+  const action =
+    'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.';
+
+  const game = new TestGame({
+    players: [
+      {
+        playerArea: [core.hero.beravor],
+        library: [
+          core.ally.veteranAxehand,
+          core.ally.veteranAxehand,
+          core.ally.veteranAxehand,
+        ],
+      },
+    ],
+  });
+
+  const player = game.getPlayer(1);
+  const beravor = game.getCard('Beravor');
+  expect(player.hand.cards.length).toEqual(0);
+  expect(player.library.cards.length).toEqual(3);
+  expect(game.actions.length).toEqual(1);
+  game.do(action);
+  expect(player.hand.cards.length).toEqual(2);
+  expect(game.actions.length).toEqual(0);
+  beravor.exe(['CALL', 'ready']);
+  expect(game.actions.length).toEqual(0);
+  game.exe(['GAME', ['CALL', 'endRound']]);
+  expect(game.actions.length).toEqual(1);
 });
 
 // it('Glorfindel', () => {
@@ -72,49 +84,6 @@ it('Gimli', () => {
 //   game.chooseOption(action);
 //   expect(gloin.token.resources).toEqual(2);
 // });
-
-it('Beravor', () => {
-  const action =
-    'Exhaust Beravor to choose a player. That player draws 2 cards. Limit once per round.';
-
-  const game = new TestGame({
-    type: 'scenario',
-    data: {
-      scenario: {
-        name: 'empty',
-        quest: [],
-        sets: [],
-      },
-      players: [
-        {
-          name: 'test',
-          heroes: [core.hero.beravor],
-          library: [
-            core.ally.veteranAxehand,
-            core.ally.veteranAxehand,
-            core.ally.veteranAxehand,
-          ],
-        },
-      ],
-      difficulty: 'normal',
-      extra: {
-        cards: 0,
-        resources: 0,
-      },
-    },
-  });
-
-  const player = game.getPlayer('0')!;
-  const beravor = game.getCard('Beravor');
-  expect(player.hand.cards.length).toEqual(0);
-  expect(player.library.cards.length).toEqual(3);
-  expect(game.actions.length).toEqual(1);
-  game.do(action);
-  expect(player.hand.cards.length).toEqual(2);
-  expect(game.actions.length).toEqual(0);
-  beravor.exe(['CALL', 'ready']);
-  expect(game.actions.length).toEqual(0);
-});
 
 // it('Éowyn', async () => {
 //   const action =

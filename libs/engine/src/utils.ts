@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isArray } from 'lodash';
 import _ from 'lodash';
 
@@ -55,7 +56,7 @@ export function remove<T>(array: T[], item: T) {
   array.splice(index);
 }
 
-export function stringify(obj: object) {
+export function stringify<T>(obj: T) {
   const placeholder = '____PLACEHOLDER____';
   const fns: Array<any> = [];
   let json = JSON.stringify(

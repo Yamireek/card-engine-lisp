@@ -26,7 +26,7 @@ import { Card } from './Card';
 import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
 import { cloneDeep, isArray, sum } from 'lodash';
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, toJS } from 'mobx';
 
 export type Types = {
   CARD: { id: CardId; entity: Card; filter: EntityFilter<'CARD', Card> };
@@ -39,12 +39,18 @@ export type Types = {
   GAME: { id: never; entity: Game; filter: never };
 };
 
+export type Triggers = { end_of_round: Action[] };
+
+export type Limits = Record<string, { usages: number; max: number }>;
+
 export class Game {
   public nextId = 1;
   public player: Record<PlayerId, Player> = {};
   public zone: Record<ZoneId, Zone> = {};
   public card: Record<CardId, Card> = {};
   public effects: Effect[] = [];
+  public triggers: Triggers = { end_of_round: [] };
+  public limits: Limits = {};
 
   toJSON(): GameState {
     return {
@@ -53,6 +59,8 @@ export class Game {
       zones: this.zones.map((z) => z.toJSON()),
       cards: this.zones.flatMap((z) => z.cards).map((c) => c.toJSON()),
       effects: this.effects.map(stringify),
+      triggers: stringify(this.triggers),
+      limits: toJS(this.limits),
     };
   }
 
@@ -101,6 +109,9 @@ export class Game {
       for (const effect of state.effects) {
         this.effects.push(eval(effect));
       }
+
+      this.triggers = eval(state.triggers);
+      this.limits = cloneDeep(state.limits);
     }
 
     this.recalculate();
@@ -254,13 +265,8 @@ export class Game {
         const [, ...actions] = action;
         return actions.every((a) => this.canEntityExe(type, entity, a));
       }
-      case 'CHOOSE': {
-        const [, options] = action;
-        return this.canExe(['CHOOSE', options]);
-      }
-      default: {
-        throw new Error('not implemented');
-      }
+      default:
+        return this.canExe(action);
     }
   }
 
@@ -285,6 +291,12 @@ export class Game {
             throw new Error('not implemented');
         }
       }
+      case 'SPEND_LIMIT': {
+        const limit = this.limits[action[1].name];
+        return !limit || limit.usages < limit.max;
+      }
+      case 'SET_TRIGGER':
+        return true;
       default:
         throw new Error('not implemented');
     }
@@ -407,7 +419,11 @@ export class Game {
   });
 
   endRound: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'playRound']], // TODO
+    body: [
+      'SEQ',
+      ...this.triggers.end_of_round.map((t) => t),
+      ['CALL', 'playRound'],
+    ],
   });
 
   beginPhase: EntityMethod<Game, [Phase]> = () => ({

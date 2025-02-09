@@ -74,6 +74,25 @@ export class Interpreter {
         this.stack.unshift(...inner);
         return false;
       }
+      case 'RESET_LIMIT':
+        delete this.game.limits[action[1]];
+        return false;
+      case 'SPEND_LIMIT': {
+        const existing = this.game.limits[action[1].name];
+        if (existing) {
+          existing.usages += action[1].usages;
+        } else {
+          this.game.limits[action[1].name] = {
+            usages: action[1].usages,
+            max: action[1].max,
+          };
+        }
+        return false;
+      }
+
+      case 'SET_TRIGGER':
+        this.game.triggers[action[1]].push(action[2]);
+        return false;
       default: {
         throw new Error('unknown action: ' + JSON.stringify(action));
       }
@@ -130,11 +149,8 @@ export class Interpreter {
         const [, a] = action;
         return this.exe(a as any);
       }
-      case 'CHOOSE': {
-        return this.exe(action);
-      }
       default: {
-        throw new Error('uknown action: ' + JSON.stringify(action));
+        return this.exe(action);
       }
     }
   }

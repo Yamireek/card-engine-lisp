@@ -1,3 +1,4 @@
+import { Limits } from '../entity';
 import { CardId, PlayerId, Tokens, ZoneId } from '../entity/types';
 import { Side, ZoneType } from './enums';
 import { CardRef } from './GameSetupData';
@@ -33,4 +34,6 @@ export type GameState = {
   zones: ZoneState[];
   cards: CardState[];
   effects: string[];
+  triggers: string;
+  limits: Limits;
 };
