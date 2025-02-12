@@ -6,6 +6,8 @@ import {
   CardRef,
   CardState,
   EntityMethod,
+  Mark,
+  Marks,
   Modifier,
   Side,
 } from '../state';
@@ -15,11 +17,10 @@ import { Zone } from './Zone';
 export class Card {
   public def: CardDefinition;
   public props: CardProps;
-
   public modifiers: Modifier[] = [];
   public tapped = false;
-
   public token: Tokens = { damage: 0, progress: 0, resource: 0 };
+  public mark: Marks = {};
 
   toJSON(): CardState {
     return {
@@ -87,6 +88,10 @@ export class Card {
     body: ['CALL', 'addToken', amount, 'damage'],
   });
 
+  generateResources: EntityMethod<Card, [number]> = (amount) => ({
+    body: ['CALL', 'addToken', amount, 'resource'],
+  });
+
   moveTo: EntityMethod<Card, [ZoneId, Side?]> = (zoneId, side) => ({
     body: () => {
       const index = this.zone.cards.findIndex((c) => c === this);
@@ -97,6 +102,20 @@ export class Card {
       if (side) {
         this.flip(side);
       }
+    },
+  });
+
+  addMark: EntityMethod<Card, [Mark]> = (mark) => ({
+    body: () => {
+      this.mark[mark] = true;
+    },
+  });
+
+  travel: EntityMethod<Card, []> = () => ({
+    isAllowed: () =>
+      this.props.type === 'location' && this.zone.type === 'stagingArea',
+    body: () => {
+      return; // TODO
     },
   });
 }

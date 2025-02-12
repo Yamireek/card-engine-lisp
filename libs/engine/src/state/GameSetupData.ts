@@ -39,6 +39,8 @@ export type EntityMethod<E, Args extends any[] = void[]> = (...args: Args) => {
 
 export type EntityAction<T> =
   | ['SEQ', ...EntityAction<T>[]]
+  | ['REPEAT', number, EntityAction<T>]
+  | ['WHILE', () => boolean, EntityAction<T>]
   | CallEntity<T>
   | Action;
 

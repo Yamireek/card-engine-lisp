@@ -48,4 +48,20 @@ export class Player {
       ],
     ],
   });
+
+  commitCharactersToQuest: EntityMethod<Player, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  revealEncounterCard: EntityMethod<Player, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  optionalEngagement: EntityMethod<Player, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
+
+  engagementCheck: EntityMethod<Player, []> = () => ({
+    body: ['SEQ'], // TODO
+  });
 }

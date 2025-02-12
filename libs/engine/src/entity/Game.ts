@@ -15,6 +15,7 @@ import {
   EntityMethod,
   GameState,
   GameZoneType,
+  Mark,
   Phase,
   PlayerZoneType,
   Side,
@@ -25,7 +26,7 @@ import { Zone } from './Zone';
 import { Card } from './Card';
 import { stringify, values } from '../utils';
 import { CardsRepo } from '../repo';
-import { cloneDeep, isArray, sum } from 'lodash';
+import { cloneDeep, isArray, sum, sumBy } from 'lodash';
 import { makeAutoObservable, toJS } from 'mobx';
 
 export type Types = {
@@ -184,6 +185,10 @@ export class Game {
     return values(this.card);
   }
 
+  get inAPlay() {
+    return values(this.card); // TODO only in play
+  }
+
   get players() {
     return values(this.player);
   }
@@ -194,6 +199,10 @@ export class Game {
 
   get encounterDeck() {
     return this.findZone('encounterDeck');
+  }
+
+  get activeLocation() {
+    return this.findZone('activeLocation');
   }
 
   findZone(type: GameZoneType) {
@@ -265,6 +274,9 @@ export class Game {
         const [, ...actions] = action;
         return actions.every((a) => this.canEntityExe(type, entity, a));
       }
+      case 'REPEAT':
+      case 'WHILE':
+        throw new Error('not implemented');
       default:
         return this.canExe(action);
     }
@@ -377,23 +389,89 @@ export class Game {
   });
 
   playResourcePhase: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'beginPhase', 'resource'], ['CALL', 'endPhase']], // TODO
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'resource'],
+      ['PLAYER', 'ALL', ['CALL', 'draw', 1]],
+      [
+        'CARD',
+        this.cards.filter((c) => c.props.type === 'hero').map((c) => c.id),
+        ['CALL', 'generateResources', 1],
+      ],
+      ['CHOOSE', { type: 'player_actions', label: 'End resource phase' }],
+      ['CALL', 'endPhase'],
+    ],
   });
 
   playPlanningPhase: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'beginPhase', 'planning'], ['CALL', 'endPhase']], // TODO
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'planning'],
+      ['CHOOSE', { type: 'player_actions', label: 'End planning phase' }],
+      ['CALL', 'endPhase'],
+    ],
   });
 
   playQuestPhase: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'beginPhase', 'quest'], ['CALL', 'endPhase']], // TODO
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'quest'],
+      ['PLAYER', 'ALL', ['CALL', 'commitCharactersToQuest']],
+      ['CHOOSE', { type: 'player_actions', label: 'Staging' }],
+      [
+        'REPEAT',
+        this.players.length,
+        ['PLAYER', 'ALL', ['CALL', 'revealEncounterCard']],
+      ],
+      ['CHOOSE', { type: 'player_actions', label: 'Quest resolution' }],
+      ['CALL', 'resolveQuesting'],
+      ['CHOOSE', { type: 'player_actions', label: 'End quest phase' }],
+      ['CALL', 'clearMarks', 'questing'],
+      ['CALL', 'endPhase'],
+    ],
   });
 
   playTravelPhase: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'beginPhase', 'travel'], ['CALL', 'endPhase']], // TODO
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'travel'],
+      this.activeLocation.cards.length === 0
+        ? [
+            'CHOOSE',
+            {
+              label: 'Choose location for travel',
+              type: 'card',
+              filter: 'ALL',
+              player: 1, // TODO first player
+              action: ['CALL', 'travel'],
+              min: 0,
+              max: 1,
+            },
+          ]
+        : ['SEQ'],
+      ['CHOOSE', { type: 'player_actions', label: 'End travel phase' }],
+      ['CALL', 'endPhase'],
+    ],
   });
 
+  get enemiesToEngage() {
+    return []; // TODO
+  }
+
   playEncounterPhase: EntityMethod<Game, []> = () => ({
-    body: ['SEQ', ['CALL', 'beginPhase', 'encounter'], ['CALL', 'endPhase']], // TODO
+    body: [
+      'SEQ',
+      ['CALL', 'beginPhase', 'encounter'],
+      ['PLAYER', 'ALL', ['CALL', 'optionalEngagement']],
+      ['CHOOSE', { type: 'player_actions', label: 'Engagement Checks' }],
+      [
+        'WHILE',
+        () => this.enemiesToEngage.length > 0,
+        ['PLAYER', 'ALL', ['CALL', 'engagementCheck']],
+      ],
+      ['CHOOSE', { type: 'player_actions', label: 'End encounter phase' }],
+      ['CALL', 'endPhase'],
+    ],
   });
 
   playCombatPhase: EntityMethod<Game, []> = () => ({
@@ -447,4 +525,40 @@ export class Game {
       ],
     ];
   }
+
+  clearMarks: EntityMethod<Game, [Mark]> = (mark) => ({
+    body: () => {
+      for (const card of this.cards) {
+        delete card.mark[mark];
+      }
+    },
+  });
+
+  placeProgress: EntityMethod<Game, [number]> = (amount) => ({
+    body: () => {
+      // TODO
+    },
+  });
+
+  resolveQuesting: EntityMethod<Game, []> = () => ({
+    body: () => {
+      const willpower = sumBy(
+        this.inAPlay.filter((c) => c.mark.questing),
+        (c) => c.props.willpower ?? 0
+      );
+      const threat = sumBy(this.inAPlay, (c) => c.props.threat ?? 0);
+
+      if (willpower > threat) {
+        return ['CALL', 'placeProgress', willpower - threat];
+      }
+
+      if (threat > willpower) {
+        return [
+          'PLAYER',
+          'ALL',
+          ['CALL', 'incrementThreat', threat - willpower],
+        ];
+      }
+    },
+  });
 }
