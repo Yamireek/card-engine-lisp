@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 import { Ability, CardDefinition } from './GameSetupData';
 import {
   AllyProps,
@@ -22,12 +22,14 @@ export function ally(
       sphere: [props.sphere],
       type: 'ally',
       abilities,
+      actions: [],
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -44,12 +46,14 @@ export function hero(
       type: 'hero',
       unique: true,
       abilities,
+      actions: [],
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -66,12 +70,14 @@ export function event(
       traits: [],
       type: 'event',
       abilities,
+      actions: [],
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -87,12 +93,14 @@ export function attachment(
       sphere: [props.sphere],
       type: 'attachment',
       abilities,
+      actions: [],
     },
     back: {
       type: 'player_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -108,12 +116,14 @@ export function enemy(
       sphere: [],
       type: 'enemy',
       abilities,
+      actions: [],
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -129,12 +139,14 @@ export function location(
       sphere: [],
       type: 'location',
       abilities,
+      actions: [],
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -151,12 +163,14 @@ export function treachery(
       traits: [],
       type: 'treachery',
       abilities,
+      actions: [],
     },
     back: {
       type: 'encounter_back',
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'portrait',
   };
@@ -174,6 +188,7 @@ export function quest(props: QuestDefinition): CardDefinition {
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     back: {
       name: nameB,
@@ -183,6 +198,7 @@ export function quest(props: QuestDefinition): CardDefinition {
       traits: [],
       sphere: [],
       abilities: [],
+      actions: [],
     },
     orientation: 'landscape',
   };

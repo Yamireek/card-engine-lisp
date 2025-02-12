@@ -19,7 +19,9 @@ export const InterpreterDialogs = observer(
         const cards = props.interpreter.game
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter('CARD', options.filter as any)
-          .filter((c) => props.interpreter.game.canCardExe(c, options.action));
+          .filter((c) =>
+            props.interpreter.game.canEntityExe('CARD', c, options.action)
+          );
 
         return (
           <ChooseOptionDialog
